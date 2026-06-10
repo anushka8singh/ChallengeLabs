@@ -1,0 +1,226 @@
+// ===========================================
+// KPLabs Linux Lab - Prisma Schema (Phase 2 - Corrected)
+// Database Design & Prisma Integration
+// ===========================================
+// This schema defines the core data models for the platform.
+// It is designed to support:
+// - User progress tracking
+// - Challenge & task management
+// - Session lifecycle (container-based labs)
+// - Automated validation results
+// - Analytics & learning insights
+// ===========================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ===========================================
+// ENUMS
+// ===========================================
+
+/// Status of a lab session
+enum SessionStatus {
+  CREATING // Container is being created
+  RUNNING // Active lab session
+  STOPPED // Manually stopped by user
+  EXPIRED // Automatically expired after timeout
+  FAILED // Container creation or runtime failure
+}
+
+/// Types of analytics events tracked in the system
+enum EventType {
+  CHALLENGE_STARTED
+  CHALLENGE_COMPLETED
+  SESSION_CREATED
+  SESSION_EXPIRED
+  VALIDATION_PASSED
+  VALIDATION_FAILED
+  TASK_COMPLETED
+}
+
+// ===========================================
+// MODELS
+// ===========================================
+
+/// User model
+/// Represents a registered user on the platform.
+/// Currently stores basic profile and authentication data.
+/// Will be extended with roles/permissions in future phases.
+model User {
+  id           String @id @default(cuid())
+  name         String
+  email        String @unique
+  passwordHash String // Hashed using bcrypt (added in authentication phase)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // ===========================================
+  // RELATIONSHIPS
+  // ===========================================
+  /// One user can have multiple lab sessions
+  sessions Session[]
+
+  /// One user can generate multiple analytics events
+  analyticsEvents AnalyticsEvent[]
+
+  @@index([email])
+  @@map("users")
+}
+
+/// Challenge model
+/// Represents a hands-on lab exercise (e.g., "Linux File System Basics").
+/// Contains metadata and configuration for the lab environment.
+model Challenge {
+  id               String @id @default(cuid())
+  title            String
+  slug             String @unique // URL-friendly identifier (e.g., "linux-file-system")
+  description      String @db.Text
+  difficulty       String // Beginner | Intermediate | Advanced
+  dockerImage      String // Docker image used to run this challenge
+  estimatedMinutes Int // Estimated time to complete
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // ===========================================
+  // RELATIONSHIPS
+  // ===========================================
+  /// One challenge has multiple ordered tasks
+  tasks ChallengeTask[]
+
+  /// One challenge can be attempted in many sessions
+  sessions Session[]
+
+  /// One challenge can have many analytics events
+  analyticsEvents AnalyticsEvent[]
+
+  @@index([slug])
+  @@index([difficulty])
+  @@map("challenges")
+}
+
+/// ChallengeTask model
+/// Represents an individual task/step inside a challenge.
+/// Tasks are ordered and can have hints for students.
+model ChallengeTask {
+  id          String  @id @default(cuid())
+  challengeId String
+  title       String
+  description String  @db.Text
+  order       Int // Used for ordering tasks within a challenge
+  hint        String? @db.Text
+
+  createdAt DateTime @default(now())
+
+  // ===========================================
+  // RELATIONSHIPS
+  // ===========================================
+  /// Belongs to one challenge
+  challenge Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+
+  /// One task can have multiple validation results across different sessions
+  validationResults ValidationResult[]
+
+  @@index([challengeId])
+  @@index([order])
+  @@map("challenge_tasks")
+}
+
+/// Session model
+/// Represents an active or historical lab session for a user.
+/// This is the core entity that links a user to a running Docker container.
+model Session {
+  id          String        @id @default(cuid())
+  userId      String
+  challengeId String
+  containerId String? // Docker container ID (populated when container is created)
+  status      SessionStatus @default(CREATING)
+
+  startedAt      DateTime @default(now())
+  expiresAt      DateTime // When the session will automatically expire
+  lastActivityAt DateTime @default(now())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // ===========================================
+  // RELATIONSHIPS
+  // ===========================================
+  /// Belongs to one user
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// Belongs to one challenge
+  challenge Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+
+  /// One session can have multiple validation attempts
+  validationResults ValidationResult[]
+
+  @@index([userId])
+  @@index([challengeId])
+  @@index([status])
+  @@index([expiresAt])
+  @@map("sessions")
+}
+
+/// ValidationResult model
+/// Stores the result of a "Check Answer" action performed by the user.
+/// Links a specific task within a session to its pass/fail outcome.
+model ValidationResult {
+  id        String  @id @default(cuid())
+  sessionId String
+  taskId    String
+  passed    Boolean
+  feedback  String? @db.Text
+
+  createdAt DateTime @default(now())
+
+  // ===========================================
+  // RELATIONSHIPS
+  // ===========================================
+  /// Belongs to one session
+  session Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  /// Belongs to one challenge task
+  task ChallengeTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+  @@index([taskId])
+  @@index([passed])
+  @@map("validation_results")
+}
+
+/// AnalyticsEvent model
+/// Stores important events for analytics, progress tracking, and insights.
+/// Uses flexible JSON metadata for future extensibility.
+model AnalyticsEvent {
+  id          String    @id @default(cuid())
+  userId      String?
+  challengeId String?
+  sessionId   String?
+  eventType   EventType
+  metadata    Json? // Flexible storage for event-specific data
+
+  createdAt DateTime @default(now())
+
+  // ===========================================
+  // RELATIONSHIPS
+  // ===========================================
+  /// Optional link to user
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  /// Optional link to challenge
+  challenge Challenge? @relation(fields: [challengeId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([challengeId])
+  @@index([eventType])
+  @@index([createdAt])
+  @@map("analytics_events")
+}

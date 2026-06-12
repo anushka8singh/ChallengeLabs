@@ -10,6 +10,7 @@ import { logger } from './config/logger';
 import { prisma } from './config/prisma';
 import { redis, closeRedis } from './config/redis';
 import { initializeSocketIO } from './config/socket';
+import { dockerService } from './services/docker.service';
 
 const serverLogger = logger.child({ service: 'server' });
 
@@ -28,18 +29,29 @@ const startServer = async () => {
     serverLogger.info('✅ Connected to Redis');
 
     // ===========================================
-    // 3. Create HTTP Server
+    // 3. Verify Docker Connection
+    // ===========================================
+    const dockerAvailable = await dockerService.startupHealthCheck();
+    if (!dockerAvailable) {
+      serverLogger.warn(
+        dockerService.getConnectionInfo(),
+        'Docker is unavailable at startup; session container creation will fail until Docker is reachable'
+      );
+    }
+
+    // ===========================================
+    // 4. Create HTTP Server
     // ===========================================
     const httpServer = http.createServer(app);
 
     // ===========================================
-    // 4. Initialize Socket.IO
+    // 5. Initialize Socket.IO
     // ===========================================
     initializeSocketIO(httpServer);
     serverLogger.info('✅ Socket.IO initialized');
 
     // ===========================================
-    // 5. Start HTTP Server
+    // 6. Start HTTP Server
     // ===========================================
     const PORT = env.PORT;
     

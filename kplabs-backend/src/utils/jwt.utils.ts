@@ -1,14 +1,16 @@
 // ===========================================
 // JWT Utility Functions
 // Handles token generation and verification
+// Updated for Phase 4 to include role in payload for authorization
 // ===========================================
 
 import jwt from 'jsonwebtoken';
 import { env } from '../config/env';
 
-interface JwtPayload {
+export interface JwtPayload {
   userId: string;
   email: string;
+  role: 'USER' | 'ADMIN';
 }
 
 export const generateToken = (payload: JwtPayload): string => {

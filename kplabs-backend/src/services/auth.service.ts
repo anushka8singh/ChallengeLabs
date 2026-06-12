@@ -4,7 +4,6 @@
 // ===========================================
 
 import bcrypt from 'bcrypt';
-import { User } from '@prisma/client';
 import { userRepository } from '../repositories/user.repository';
 import { generateToken } from '../utils/jwt.utils';
 import { AppError } from '../middleware/errorHandler';
@@ -47,10 +46,11 @@ export class AuthService {
       throw new AppError('Invalid email or password', 401);
     }
 
-    // Generate JWT
+    // Generate JWT including role for authorization (Phase 4)
     const token = generateToken({
       userId: user.id,
       email: user.email,
+      role: user.role,
     });
 
     // Return token and user info (without password)

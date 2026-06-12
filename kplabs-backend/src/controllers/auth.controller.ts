@@ -9,39 +9,40 @@ import { successResponse, errorResponse } from '../utils/apiResponse';
 import { RegisterInput, LoginInput } from '../validators/auth.validator';
 
 export class AuthController {
-  async register(req: Request, res: Response, next: NextFunction) {
+  async register(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { name, email, password } = req.body as RegisterInput;
 
       const user = await authService.register(name, email, password);
 
-      return successResponse(res, user, 'User registered successfully', 201);
+      successResponse(res, user, 'User registered successfully', 201);
     } catch (error) {
       next(error);
     }
   }
 
-  async login(req: Request, res: Response, next: NextFunction) {
+  async login(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { email, password } = req.body as LoginInput;
 
       const result = await authService.login(email, password);
 
-      return successResponse(res, result, 'Login successful');
+      successResponse(res, result, 'Login successful');
     } catch (error) {
       next(error);
     }
   }
 
-  async getCurrentUser(req: Request, res: Response, next: NextFunction) {
+  async getCurrentUser(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       if (!req.user) {
-        return errorResponse(res, 'Unauthorized', 401);
+        errorResponse(res, 'Unauthorized', 401);
+        return;
       }
 
       const user = await authService.getCurrentUser(req.user.userId);
 
-      return successResponse(res, user);
+      successResponse(res, user);
     } catch (error) {
       next(error);
     }

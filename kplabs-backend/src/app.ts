@@ -10,6 +10,9 @@ import pinoHttp from 'pino-http';
 import { logger } from './config/logger';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 import authRoutes from './routes/auth.routes';
+import challengeRoutes, { adminChallengeRoutes } from './routes/challenge.routes';
+import sessionRoutes from './routes/session.routes';
+
 const app: Application = express();
 
 // ===========================================
@@ -46,7 +49,7 @@ app.use(pinoHttp({
 // ===========================================
 // Health Check Route (Critical for monitoring)
 // ===========================================
-app.get('/health', (req, res) => {
+app.get('/health', (_req, res) => {
   res.status(200).json({
     status: 'ok',
     service: 'kplabs-backend',
@@ -55,17 +58,24 @@ app.get('/health', (req, res) => {
   });
 });
 
-app.get('/api/health', (req, res) => {
+app.get('/api/health', (_req, res) => {
   res.status(200).json({
     status: 'healthy',
     phase: '1 - Foundation',
     message: 'Backend foundation is running successfully',
   });
 });
+// ===========================================
+// Mount API Routes
+// ===========================================
+app.use('/api/auth', authRoutes);
+app.use('/api/challenges', challengeRoutes);
+app.use('/api/admin/challenges', adminChallengeRoutes);
+app.use('/api/sessions', sessionRoutes);
 
 // ===========================================
 // API Routes Placeholder
-app.use("/api/auth", authRoutes);
+
 // Routes will be mounted here in later phases
 // Example: app.use('/api/v1/challenges', challengeRoutes);
 // ===========================================

@@ -23,6 +23,18 @@ datasource db {
 // ===========================================
 // ENUMS
 // ===========================================
+/// User roles for authorization
+enum Role {
+  USER
+  ADMIN
+}
+
+/// Difficulty levels for challenges
+enum Difficulty {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
 
 /// Status of a lab session
 enum SessionStatus {
@@ -57,6 +69,7 @@ model User {
   name         String
   email        String @unique
   passwordHash String // Hashed using bcrypt (added in authentication phase)
+  role         Role   @default(USER)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -78,16 +91,18 @@ model User {
 /// Represents a hands-on lab exercise (e.g., "Linux File System Basics").
 /// Contains metadata and configuration for the lab environment.
 model Challenge {
-  id               String @id @default(cuid())
+  id               String     @id @default(cuid())
   title            String
-  slug             String @unique // URL-friendly identifier (e.g., "linux-file-system")
-  description      String @db.Text
-  difficulty       String // Beginner | Intermediate | Advanced
-  dockerImage      String // Docker image used to run this challenge
-  estimatedMinutes Int // Estimated time to complete
+  slug             String     @unique // URL-friendly identifier
+  description      String     @db.Text
+  difficulty       Difficulty // BEGINNER | INTERMEDIATE | ADVANCED
+  dockerImage      String     // e.g., "kplabs/linux-basics:latest"
+  estimatedMinutes Int        // Estimated time to complete
+  isPublished      Boolean    @default(false)
+  deletedAt        DateTime?  // Soft delete support
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
 
   // ===========================================
   // RELATIONSHIPS
@@ -103,6 +118,7 @@ model Challenge {
 
   @@index([slug])
   @@index([difficulty])
+  @@index([isPublished])
   @@map("challenges")
 }
 
@@ -116,6 +132,8 @@ model ChallengeTask {
   description String  @db.Text
   order       Int // Used for ordering tasks within a challenge
   hint        String? @db.Text
+  validationRule   String?  @db.Text  // e.g., "test -f hello.txt"
+  expectedOutcome  String?  @db.Text  // Description of expected result
 
   createdAt DateTime @default(now())
 

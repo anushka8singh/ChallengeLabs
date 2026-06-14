@@ -12,6 +12,8 @@ import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 import authRoutes from './routes/auth.routes';
 import challengeRoutes, { adminChallengeRoutes } from './routes/challenge.routes';
 import sessionRoutes from './routes/session.routes';
+import taskRoutes from './routes/task.routes';
+import progressRoutes from './routes/progress.routes';
 
 const app: Application = express();
 
@@ -72,7 +74,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/challenges', challengeRoutes);
 app.use('/api/admin/challenges', adminChallengeRoutes);
 app.use('/api/sessions', sessionRoutes);
-
+app.use('/api/tasks', taskRoutes);
+app.use('/api/progress', progressRoutes);
 // ===========================================
 // API Routes Placeholder
 

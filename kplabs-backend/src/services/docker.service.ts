@@ -362,6 +362,52 @@ export class DockerService {
   async listContainers(): Promise<any[]> {
     return this.docker.listContainers({ all: true });
   }
+
+  async execInContainer(
+    containerId: string,
+    command: string
+  ): Promise<{ exitCode: number; output: string }> {
+    try {
+      const container = this.docker.getContainer(containerId);
+
+      const exec = await container.exec({
+        Cmd: ['sh', '-c', command],
+        AttachStdout: true,
+        AttachStderr: true,
+        Tty: false,
+      });
+
+      const stream = await exec.start({ hijack: true, stdin: false });
+
+      let output = '';
+
+      stream.on('data', (chunk: Buffer) => {
+        output += chunk.toString('utf8');
+      });
+
+      return new Promise((resolve, reject) => {
+        stream.on('end', async () => {
+          try {
+            const inspectResult = await exec.inspect();
+            resolve({
+              exitCode: inspectResult.ExitCode || 0,
+              output: output.trim(),
+            });
+          } catch (inspectError) {
+            reject(inspectError);
+          }
+        });
+
+        stream.on('error', (err) => reject(err));
+      });
+    } catch (error: any) {
+      dockerLogger.error(
+        { containerId, command, error: error.message },
+        'Failed to execute command in container'
+      );
+      throw new Error(`Failed to execute command in container: ${error.message}`);
+    }
+  }
 }
 
 export const dockerService = new DockerService();

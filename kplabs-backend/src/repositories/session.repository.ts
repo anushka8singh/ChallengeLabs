@@ -5,7 +5,11 @@
 // ===========================================
 
 import { prisma } from '../config/prisma';
-import { Session, SessionStatus } from '@prisma/client';
+import { Prisma, Session, SessionStatus } from '@prisma/client';
+
+type SessionWithChallenge = Prisma.SessionGetPayload<{
+  include: { challenge: true };
+}>;
 
 export class SessionRepository {
   async createSession(data: {
@@ -36,7 +40,7 @@ export class SessionRepository {
     });
   }
 
-  async findActiveSessionByUser(userId: string): Promise<Session | null> {
+  async findActiveSessionByUser(userId: string): Promise<SessionWithChallenge | null> {
     return prisma.session.findFirst({
       where: {
         userId,
@@ -51,7 +55,7 @@ export class SessionRepository {
     });
   }
 
-  async findById(id: string): Promise<Session | null> {
+  async findById(id: string): Promise<SessionWithChallenge | null> {
     return prisma.session.findUnique({
       where: { id },
       include: {

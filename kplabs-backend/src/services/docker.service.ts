@@ -363,6 +363,60 @@ export class DockerService {
     return this.docker.listContainers({ all: true });
   }
 
+    /**
+   * Create an interactive exec instance inside a container (for terminal)
+   */
+  async createExec(
+    containerId: string,
+    cmd: string[] = ['/bin/bash', '-i']
+  ): Promise<any> {
+    try {
+      const container = this.docker.getContainer(containerId);
+      const exec = await container.exec({
+        Cmd: cmd,
+        AttachStdin: true,
+        AttachStdout: true,
+        AttachStderr: true,
+        Tty: true,
+        Env: ['TERM=xterm-256color'],
+      });
+      dockerLogger.info({ containerId, cmd }, 'Interactive exec created');
+      return exec;
+    } catch (error: any) {
+      dockerLogger.error({ containerId, error: error.message }, 'Failed to create exec');
+      throw new Error(`Failed to create exec: ${error.message}`);
+    }
+  }
+
+  /**
+   * Resize the TTY of an active exec (for terminal resize)
+   */
+  async resizeExec(exec: any, cols: number, rows: number): Promise<void> {
+    try {
+      await exec.resize({ h: rows, w: cols });
+      dockerLogger.info({ cols, rows }, 'Exec TTY resized');
+    } catch (error: any) {
+      dockerLogger.error({ error: error.message }, 'Failed to resize exec');
+    }
+  }
+
+  /**
+   * Start and attach to an exec stream for bidirectional communication
+   */
+  async attachExec(exec: any): Promise<any> {
+    try {
+      const stream = await exec.start({
+        hijack: true,
+        stdin: true,
+      });
+      dockerLogger.info('Exec stream attached successfully');
+      return stream;
+    } catch (error: any) {
+      dockerLogger.error({ error: error.message }, 'Failed to attach exec stream');
+      throw new Error(`Failed to attach exec: ${error.message}`);
+    }
+  }
+  
   async execInContainer(
     containerId: string,
     command: string

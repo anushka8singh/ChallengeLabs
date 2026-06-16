@@ -1,12 +1,12 @@
 // ===========================================
-// Socket.IO Server Configuration
-// Phase 1: Basic initialization only
-// Handlers and authentication will be added in later phases
+// Socket.IO Server Configuration (Phase 7)
 // ===========================================
 
 import { Server as HttpServer } from 'http';
-import { Server, Socket } from 'socket.io';
+import { Server } from 'socket.io';
 import { logger } from './logger';
+import { socketAuthMiddleware, AuthenticatedSocket } from '../socket/socketAuth';
+import { setupTerminalHandlers } from '../socket/terminal.socket';
 
 const socketLogger = logger.child({ service: 'socket.io' });
 
@@ -17,29 +17,36 @@ export const initializeSocketIO = (httpServer: HttpServer): Server => {
     cors: {
       origin: process.env.NODE_ENV === 'development' 
         ? ['http://localhost:3000', 'http://localhost:5173'] 
-        : false, // Will be configured properly in production
+        : false,
       methods: ['GET', 'POST'],
       credentials: true,
     },
-    // Connection settings
     pingTimeout: 60000,
     pingInterval: 25000,
     connectTimeout: 45000,
   });
 
-  // Basic connection logging (will be expanded later)
-  io.on('connection', (socket: Socket) => {
-    socketLogger.info({ socketId: socket.id }, 'Client connected to Socket.IO');
+  // Apply authentication middleware to all socket connections
+  io.use(socketAuthMiddleware);
+
+  io.on('connection', (socket: AuthenticatedSocket) => {
+    socketLogger.info(
+      { socketId: socket.id, userId: socket.user?.userId }, 
+      'Client connected to Socket.IO'
+    );
 
     socket.on('disconnect', (reason) => {
-      socketLogger.info({ socketId: socket.id, reason }, 'Client disconnected');
+      socketLogger.info(
+        { socketId: socket.id, userId: socket.user?.userId, reason }, 
+        'Client disconnected'
+      );
     });
-
-    // Placeholder for future authentication middleware
-    // socket.use(async (packet, next) => { ... });
   });
 
-  socketLogger.info('Socket.IO server initialized successfully');
+  // Setup terminal handlers
+  setupTerminalHandlers(io);
+
+  socketLogger.info('Socket.IO server initialized with authentication and terminal support');
   return io;
 };
 

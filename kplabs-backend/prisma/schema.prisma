@@ -1,6 +1,4 @@
-// ===========================================
-// KPLabs Linux Lab - Prisma Schema (Phase 2 - Corrected)
-// Database Design & Prisma Integration
+
 // ===========================================
 // This schema defines the core data models for the platform.
 // It is designed to support:
@@ -20,9 +18,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ===========================================
-// ENUMS
-// ===========================================
+
 /// User roles for authorization
 enum Role {
   USER
@@ -68,7 +64,7 @@ model User {
   id           String @id @default(cuid())
   name         String
   email        String @unique
-  passwordHash String // Hashed using bcrypt (added in authentication phase)
+  passwordHash String // Hashed using bcrypt 
   role         Role   @default(USER)
 
   createdAt DateTime @default(now())

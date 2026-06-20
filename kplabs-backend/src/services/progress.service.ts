@@ -15,7 +15,13 @@ export interface ProgressData {
   completedTasks: number;
   totalTasks: number;
   percentage: number;
-  currentTask: { id: string; title: string; order: number } | null;
+  currentTask: {
+  id: string;
+  title: string;
+  description: string;
+  hint: string | null;
+  order: number;
+} | null;
   lastValidatedAt: string | null;
 }
 
@@ -68,7 +74,15 @@ export class ProgressService {
       completedTasks,
       totalTasks,
       percentage,
-      currentTask: currentTask ? { id: currentTask.id, title: currentTask.title, order: currentTask.order } : null,
+      currentTask: currentTask
+  ? {
+      id: currentTask.id,
+      title: currentTask.title,
+      description: currentTask.description,
+      hint: currentTask.hint,
+      order: currentTask.order
+    }
+  : null,
       lastValidatedAt,
     };
   }

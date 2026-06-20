@@ -1,0 +1,65 @@
+import { NavLink, useNavigate } from 'react-router-dom';
+import { LayoutDashboard, BookOpen, LogOut, Zap } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
+
+const navItems = [
+  { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { to: '/challenges', label: 'Challenges', icon: BookOpen },
+];
+
+const Sidebar = () => {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
+  return (
+    <aside className="sidebar">
+      {/* Logo */}
+      <div className="sidebar-logo">
+        <div className="sidebar-logo-icon">
+          <Zap size={18} className="text-purple-400" />
+        </div>
+        <span className="sidebar-logo-text">ChallengeLabs</span>
+      </div>
+
+      {/* Navigation */}
+      <nav className="sidebar-nav">
+        <p className="sidebar-section-label">Navigation</p>
+        {navItems.map(({ to, label, icon: Icon }) => (
+          <NavLink
+            key={to}
+            to={to}
+            className={({ isActive }) =>
+              `sidebar-nav-item ${isActive ? 'sidebar-nav-item--active' : ''}`
+            }
+          >
+            <Icon size={16} />
+            <span>{label}</span>
+          </NavLink>
+        ))}
+      </nav>
+
+      {/* User Profile */}
+      <div className="sidebar-footer">
+        <div className="sidebar-user">
+          <div className="sidebar-avatar">
+            {user?.name?.charAt(0).toUpperCase() ?? 'U'}
+          </div>
+          <div className="sidebar-user-info">
+            <p className="sidebar-user-name">{user?.name ?? 'User'}</p>
+            <p className="sidebar-user-email">{user?.email ?? ''}</p>
+          </div>
+        </div>
+        <button onClick={handleLogout} className="sidebar-logout" title="Sign out">
+          <LogOut size={15} />
+        </button>
+      </div>
+    </aside>
+  );
+};
+
+export default Sidebar;

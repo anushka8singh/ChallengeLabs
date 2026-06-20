@@ -98,6 +98,8 @@ export class ValidationService {
       task.validationRule || '',
       task.expectedOutcome || null,
       session.containerId
+
+      
     );
 
     const savedResult = await prisma.validationResult.create({

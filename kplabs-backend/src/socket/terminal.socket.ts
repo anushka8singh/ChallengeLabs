@@ -19,71 +19,133 @@ export const setupTerminalHandlers = (io: Server) => {
     const userId = socket.user.userId;
 
     socket.on('terminal:connect', async (payload: { sessionId: string }) => {
+      console.log('TERMINAL CONNECT RECEIVED');
+      console.log(payload);
+
       try {
         if (!payload?.sessionId) {
-          socket.emit('terminal:error', { message: 'sessionId is required' });
+          socket.emit('terminal:error', {
+            message: 'sessionId is required',
+          });
           return;
         }
 
-        await terminalService.connectTerminal(socket, payload.sessionId, userId);
+        await terminalService.connectTerminal(
+          socket,
+          payload.sessionId,
+          userId
+        );
       } catch (error: any) {
-        terminalSocketLogger.error({ userId, error: error.message }, 'terminal:connect failed');
-        socket.emit('terminal:error', { message: error.message || 'Failed to connect terminal' });
+        console.error('TERMINAL CONNECT FAILED');
+        console.error(error);
+
+        terminalSocketLogger.error(
+          {
+            userId,
+            error: error.message,
+          },
+          'terminal:connect failed'
+        );
+
+        socket.emit('terminal:error', {
+          message: error.message || 'Failed to connect terminal',
+        });
       }
     });
 
     socket.on('terminal:input', async (data: string) => {
       try {
         const sessionId = (socket as any).currentSessionId;
+
         if (!sessionId) {
-          socket.emit('terminal:error', { message: 'No active terminal session' });
+          socket.emit('terminal:error', {
+            message: 'No active terminal session',
+          });
           return;
         }
+
         await terminalService.handleInput(sessionId, data);
       } catch (error: any) {
-        socket.emit('terminal:error', { message: error.message || 'Failed to process input' });
+        socket.emit('terminal:error', {
+          message: error.message || 'Failed to process input',
+        });
       }
     });
 
-    socket.on('terminal:resize', async (payload: { cols: number; rows: number }) => {
-      try {
-        const sessionId = (socket as any).currentSessionId;
-        if (!sessionId) {
-          socket.emit('terminal:error', { message: 'No active terminal session' });
-          return;
+    socket.on(
+      'terminal:resize',
+      async (payload: { cols: number; rows: number }) => {
+        try {
+          const sessionId = (socket as any).currentSessionId;
+
+          if (!sessionId) {
+            socket.emit('terminal:error', {
+              message: 'No active terminal session',
+            });
+            return;
+          }
+
+          if (
+            typeof payload.cols !== 'number' ||
+            typeof payload.rows !== 'number'
+          ) {
+            socket.emit('terminal:error', {
+              message: 'Invalid resize dimensions',
+            });
+            return;
+          }
+
+          await terminalService.handleResize(
+            sessionId,
+            payload.cols,
+            payload.rows
+          );
+        } catch (error: any) {
+          socket.emit('terminal:error', {
+            message: error.message || 'Resize failed',
+          });
         }
-        if (typeof payload.cols !== 'number' || typeof payload.rows !== 'number') {
-          socket.emit('terminal:error', { message: 'Invalid resize dimensions' });
-          return;
-        }
-        await terminalService.handleResize(sessionId, payload.cols, payload.rows);
-      } catch (error: any) {
-        socket.emit('terminal:error', { message: error.message || 'Resize failed' });
       }
-    });
+    );
 
     socket.on('terminal:disconnect', async () => {
       try {
         const sessionId = (socket as any).currentSessionId;
+
         if (sessionId) {
           await terminalService.disconnectTerminal(sessionId);
           delete (socket as any).currentSessionId;
         }
       } catch (error: any) {
-        terminalSocketLogger.warn({ error: error.message }, 'Error on explicit terminal disconnect');
+        terminalSocketLogger.warn(
+          { error: error.message },
+          'Error on explicit terminal disconnect'
+        );
       }
     });
 
     socket.on('disconnect', async (reason) => {
       try {
         const sessionId = (socket as any).currentSessionId;
+
         if (sessionId) {
           await terminalService.disconnectTerminal(sessionId);
           delete (socket as any).currentSessionId;
         }
-        terminalSocketLogger.info({ socketId: socket.id, userId, reason }, 'Socket disconnected');
+
+        terminalSocketLogger.info(
+          {
+            socketId: socket.id,
+            userId,
+            reason,
+          },
+          'Socket disconnected'
+        );
       } catch (error: any) {
-        terminalSocketLogger.warn({ error: error.message }, 'Error during disconnect cleanup');
+        terminalSocketLogger.warn(
+          { error: error.message },
+          'Error during disconnect cleanup'
+        );
       }
     });
   });

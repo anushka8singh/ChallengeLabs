@@ -20,77 +20,149 @@ export class TerminalService {
     socket: Socket 
   }> = new Map();
 
-  async connectTerminal(socket: Socket, sessionId: string, userId: string): Promise<void> {
-    const session = await sessionRepository.findById(sessionId);
-    if (!session) {
-      throw new AppError('Session not found', 404);
-    }
+async connectTerminal(
+  socket: Socket,
+  sessionId: string,
+  userId: string
+): Promise<void> {
+  console.log('STEP 1: connectTerminal entered');
+  console.log({ sessionId, userId });
 
-    if (session.userId !== userId) {
-      throw new AppError('Unauthorized access to session', 403);
-    }
+  const session = await sessionRepository.findById(sessionId);
 
-    if (session.status !== SessionStatus.RUNNING) {
-      throw new AppError('Session is not running', 400);
-    }
+  console.log('STEP 2: session lookup complete');
+  console.log(session);
 
-    if (!session.containerId) {
-      throw new AppError('No container associated with session', 400);
-    }
+  if (!session) {
+    throw new AppError('Session not found', 404);
+  }
 
-    // Clean up any existing terminal for this session
-    if (this.activeTerminals.has(sessionId)) {
-      await this.disconnectTerminal(sessionId);
-    }
+  if (session.userId !== userId) {
+    throw new AppError('Unauthorized access to session', 403);
+  }
+
+  if (session.status !== SessionStatus.RUNNING) {
+    throw new AppError('Session is not running', 400);
+  }
+
+  if (!session.containerId) {
+    throw new AppError('No container associated with session', 400);
+  }
+
+  if (this.activeTerminals.has(sessionId)) {
+    console.log('STEP 3: disconnecting existing terminal');
+    await this.disconnectTerminal(sessionId);
+  }
+
+  try {
+    console.log('STEP 4: creating exec');
+
+    let exec;
 
     try {
-      // Try /bin/bash first, fallback to /bin/sh
-      let exec;
-      try {
-        exec = await dockerService.createExec(session.containerId, ['/bin/bash', '-i']);
-      } catch (bashError: any) {
-        terminalLogger.warn({ sessionId, error: bashError.message }, 'Bash not available, using /bin/sh');
-        exec = await dockerService.createExec(session.containerId, ['/bin/sh', '-i']);
-      }
+      console.log('STEP 4A: trying bash');
 
-      const stream = await dockerService.attachExec(exec);
-
-      this.activeTerminals.set(sessionId, { exec, stream, socket });
-
-      // Stream output back to client
-      stream.on('data', (chunk: Buffer) => {
-        socket.emit('terminal:output', chunk.toString('utf8'));
-      });
-
-      stream.on('error', (err: Error) => {
-        terminalLogger.error({ sessionId, error: err.message }, 'Terminal stream error');
-        socket.emit('terminal:error', { message: 'Terminal stream error occurred' });
-      });
-
-      stream.on('end', () => {
-        terminalLogger.info({ sessionId }, 'Terminal stream ended');
-        socket.emit('terminal:closed', { reason: 'container_closed' });
-        this.activeTerminals.delete(sessionId);
-      });
-
-      // Store sessionId on socket for input/resize handlers
-      (socket as any).currentSessionId = sessionId;
-
-      terminalLogger.info(
-        { sessionId, userId, containerId: session.containerId },
-        'Terminal connected successfully'
+      exec = await dockerService.createExec(
+        session.containerId,
+        ['/bin/bash', '-i']
       );
 
-      socket.emit('terminal:connected', {
-        sessionId,
-        containerId: session.containerId,
-        message: 'Terminal connected to container',
-      });
-    } catch (error: any) {
-      terminalLogger.error({ sessionId, userId, error: error.message }, 'Failed to connect terminal');
-      throw new AppError(`Failed to connect terminal: ${error.message}`, 500);
+      console.log('STEP 4B: bash exec created');
+    } catch (bashError: any) {
+      console.error('BASH FAILED');
+      console.error(bashError);
+
+      terminalLogger.warn(
+        { sessionId, error: bashError.message },
+        'Bash not available, using /bin/sh'
+      );
+
+      console.log('STEP 4C: trying sh');
+
+      exec = await dockerService.createExec(
+        session.containerId,
+        ['/bin/sh', '-i']
+      );
+
+      console.log('STEP 4D: sh exec created');
     }
+
+    console.log('STEP 5: attaching stream');
+
+    const stream = await dockerService.attachExec(exec);
+
+    console.log('STEP 6: stream attached');
+
+    this.activeTerminals.set(sessionId, {
+      exec,
+      stream,
+      socket,
+    });
+
+    stream.on('data', (chunk: Buffer) => {
+      socket.emit('terminal:output', chunk.toString('utf8'));
+    });
+
+    stream.on('error', (err: Error) => {
+      console.error('STREAM ERROR');
+      console.error(err);
+
+      terminalLogger.error(
+        { sessionId, error: err.message },
+        'Terminal stream error'
+      );
+
+      socket.emit('terminal:error', {
+        message: 'Terminal stream error occurred',
+      });
+    });
+
+    stream.on('end', () => {
+      console.log('STREAM ENDED');
+
+      terminalLogger.info(
+        { sessionId },
+        'Terminal stream ended'
+      );
+
+      socket.emit('terminal:closed', {
+        reason: 'container_closed',
+      });
+
+      this.activeTerminals.delete(sessionId);
+    });
+
+    (socket as any).currentSessionId = sessionId;
+
+    console.log('STEP 7: emitting terminal:connected');
+
+    socket.emit('terminal:connected', {
+      sessionId,
+      containerId: session.containerId,
+      message: 'Terminal connected to container',
+    });
+
+    console.log('STEP 8: terminal connected success');
+
+  } catch (error: any) {
+    console.error('TERMINAL CONNECTION FAILED');
+    console.error(error);
+
+    terminalLogger.error(
+      {
+        sessionId,
+        userId,
+        error: error.message,
+      },
+      'Failed to connect terminal'
+    );
+
+    throw new AppError(
+      `Failed to connect terminal: ${error.message}`,
+      500
+    );
   }
+}
 
   async handleInput(sessionId: string, data: string): Promise<void> {
     const terminal = this.activeTerminals.get(sessionId);

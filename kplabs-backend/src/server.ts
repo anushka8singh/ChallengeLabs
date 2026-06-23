@@ -11,6 +11,7 @@ import { prisma } from './config/prisma';
 import { redis, closeRedis } from './config/redis';
 import { initializeSocketIO } from './config/socket';
 import { dockerService } from './services/docker.service';
+import { sessionCleanupService } from './services/sessionCleanup.service';
 
 const serverLogger = logger.child({ service: 'server' });
 
@@ -50,6 +51,17 @@ const startServer = async () => {
     initializeSocketIO(httpServer);
     serverLogger.info('✅ Socket.IO initialized');
 
+    // ===========================================
+// Session Cleanup Scheduler
+// ===========================================
+
+setInterval(async () => {
+  await sessionCleanupService.cleanupExpiredSessions();
+}, 60 * 1000);
+
+serverLogger.info(
+  'Session cleanup scheduler started (runs every 1 minute)'
+);
     // ===========================================
     // 6. Start HTTP Server
     // ===========================================

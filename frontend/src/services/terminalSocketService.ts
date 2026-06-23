@@ -10,6 +10,7 @@ class TerminalSocketService {
     onConnected?: () => void
   ) {
     if (this.socket) {
+      console.log('CONNECT CALLED');
       this.socket.disconnect();
     }
 

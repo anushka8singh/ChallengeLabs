@@ -436,8 +436,13 @@ export class DockerService {
       let output = '';
 
       stream.on('data', (chunk: Buffer) => {
-        output += chunk.toString('utf8');
-      });
+  const cleaned =
+    chunk.length > 8
+      ? chunk.subarray(8).toString('utf8')
+      : '';
+
+  output += cleaned;
+});
 
       return new Promise((resolve, reject) => {
         stream.on('end', async () => {

@@ -15,8 +15,9 @@ const XTermTerminal = ({
   writeCallback,
 }: XTermTerminalProps) => {
   const terminalRef = useRef<HTMLDivElement>(null);
-
+  
   useEffect(() => {
+    console.log('XTerm mounted');
     if (!terminalRef.current) return;
 
     const term = new Terminal({
@@ -31,9 +32,11 @@ const XTermTerminal = ({
     const fitAddon = new FitAddon();
 
     term.loadAddon(fitAddon);
-    term.open(terminalRef.current);
+   term.open(terminalRef.current);
 
-    fitAddon.fit();
+requestAnimationFrame(() => {
+  fitAddon.fit();
+});
 
     writeCallback?.((data: string) => {
       term.write(data);
@@ -53,9 +56,16 @@ const XTermTerminal = ({
 
     window.addEventListener('resize', handleResize);
 
-    setTimeout(handleResize, 100);
+    setTimeout(() => {
+  try {
+    handleResize();
+  } catch (err) {
+    console.error('XTerm resize failed', err);
+  }
+}, 100);
 
     return () => {
+      console.log('XTerm unmounted');
       window.removeEventListener('resize', handleResize);
       term.dispose();
     };

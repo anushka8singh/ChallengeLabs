@@ -3,7 +3,12 @@ import { useEffect, useState, useRef ,useCallback } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, AlertCircle, Clock, CheckCircle2, Target, Layers, Terminal as TerminalIcon, Play, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { getCurrentProgress, validateTask } from '../services/sessionService';
+import {
+  getCurrentProgress,
+  validateTask,
+  stopSession,
+  getSessionById,
+} from '../services/sessionService';
 import { terminalSocketService } from '../services/terminalSocketService';
 import type { ProgressData } from '../services/sessionService';
 
@@ -54,9 +59,14 @@ const LabWorkspacePage = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const locationState = (location.state as LabLocationState) ?? {};
-  const expiresAt = locationState.expiresAt;
-  const status = locationState.status ?? 'RUNNING';
+  const [sessionInfo, setSessionInfo] = useState<{
+  expiresAt?: string;
+  status?: string;
+}>({
+  expiresAt: (location.state as LabLocationState)?.expiresAt,
+  status: (location.state as LabLocationState)?.status,
+});
+const [timeRemaining, setTimeRemaining] = useState('');
 
   const [progress, setProgress] = useState<ProgressData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -69,8 +79,8 @@ const LabWorkspacePage = () => {
   const terminalWriteRef = useRef<(data: string) => void>(() => {});
   // Task validation state
   const [validating, setValidating] = useState<boolean>(false);
-
-  
+const [showHint, setShowHint] = useState(false);
+  const hasExpiredRef = useRef(false);
 
   // Auto-scroll terminal output
  
@@ -82,7 +92,18 @@ const LabWorkspacePage = () => {
       setLoading(false);
       return;
     }
-
+        getSessionById(sessionId)
+  .then((res) => {
+    if (res.success && res.data) {
+      setSessionInfo({
+        expiresAt: res.data.expiresAt,
+        status: res.data.status,
+      });
+    }
+  })
+  .catch(() => {
+    console.warn('Could not load session details');
+  });
     getCurrentProgress()
       .then((res) => {
         if (res.success && res.data) {
@@ -101,6 +122,55 @@ const LabWorkspacePage = () => {
       })
       .finally(() => setLoading(false));
   }, [sessionId]);
+
+  useEffect(() => {
+  if (!sessionInfo.expiresAt) return;
+
+  const updateTimer = () => {
+    const remaining =
+      new Date(sessionInfo.expiresAt!).getTime() - Date.now();
+
+      if (remaining <= 0) {
+  if (!hasExpiredRef.current) {
+    hasExpiredRef.current = true;
+
+    setTimeRemaining('Expired');
+
+    toast.error('Lab session expired');
+
+    navigate('/challenges');
+  }
+
+  return;
+}
+
+    const minutes = Math.floor(
+      remaining / (1000 * 60)
+    );
+
+    const seconds = Math.floor(
+      (remaining % (1000 * 60)) / 1000
+    );
+
+    setTimeRemaining(
+      `${minutes}m ${seconds}s remaining`
+    );
+  };
+
+  updateTimer();
+
+  const interval = setInterval(
+    updateTimer,
+    1000
+  );
+
+  return () => clearInterval(interval);
+}, [sessionInfo.expiresAt]);
+
+  useEffect(() => {
+  setShowHint(false);
+}, [progress?.currentTask?.id]);
+
 
   // Connect to terminal via Socket.IO
   useEffect(() => {
@@ -136,6 +206,23 @@ const LabWorkspacePage = () => {
   }, [sessionId]);
 
   const handleBack = () => navigate('/challenges');
+  const handleStopSession = async () => {
+  const confirmed = window.confirm(
+    'Are you sure you want to stop this lab session?'
+  );
+
+  if (!confirmed) return;
+
+  try {
+    await stopSession();
+
+    toast.success('Session stopped successfully');
+
+    navigate('/challenges');
+  } catch (error) {
+    toast.error('Failed to stop session');
+  }
+};
 
   // Command submit handler
   
@@ -181,10 +268,19 @@ const LabWorkspacePage = () => {
         {loading ? 'Lab Workspace' : (progress?.challengeTitle ?? 'Lab Workspace')}
       </span>
 
-      <div className={`lab-status-badge lab-status-badge--${status.toLowerCase()}`}>
+      <div className={`lab-status-badge lab-status-badge--${(sessionInfo.status || 'RUNNING').toLowerCase()}`}>
         <span className="lab-status-dot" />
-        {status}
+        {sessionInfo.status || 'RUNNING'}
       </div>
+      <button
+  className="btn-secondary"
+  onClick={handleStopSession}
+  style={{
+    marginLeft: '12px',
+  }}
+>
+  Stop Session
+</button>
     </div>
   );
 
@@ -231,9 +327,9 @@ const LabWorkspacePage = () => {
             {/* Status */}
             <div className="lab-info-card">
               <span className="lab-info-card-label">Status</span>
-              <div className={`lab-status-badge lab-status-badge--${status.toLowerCase()} lab-status-inline`}>
+              <div className={`lab-status-badge lab-status-badge--${(sessionInfo.status || 'RUNNING').toLowerCase()} lab-status-inline`}>
                 <span className="lab-status-dot" />
-                {status}
+                {sessionInfo.status || 'RUNNING'}
               </div>
             </div>
 
@@ -243,7 +339,7 @@ const LabWorkspacePage = () => {
                 <Clock size={12} />
                 Expires At
               </span>
-              <span className="lab-info-card-value">{formatExpiry(expiresAt)}</span>
+              <span className="lab-info-card-value"> {timeRemaining || formatExpiry(sessionInfo.expiresAt)}</span>
             </div>
 
             {/* Task Counter */}
@@ -298,7 +394,29 @@ const LabWorkspacePage = () => {
 
 {progress.currentTask.hint && (
   <div className="lab-task-hint">
-    💡 {progress.currentTask.hint}
+    {!showHint ? (
+      <button
+        type="button"
+        className="lab-hint-toggle"
+        onClick={() => setShowHint(true)}
+      >
+        💡Hint
+      </button>
+    ) : (
+      <>
+        <div style={{ marginBottom: '8px' }}>
+          💡 {progress.currentTask.hint}
+        </div>
+
+        <button
+          type="button"
+          className="lab-hint-toggle"
+          onClick={() => setShowHint(false)}
+        >
+          Hide 
+        </button>
+      </>
+    )}
   </div>
 )}
                 <div className="lab-task-status-row">
@@ -328,17 +446,50 @@ const LabWorkspacePage = () => {
               </div>
             </div>
           ) : (
-            <div className="lab-current-task-section">
-              <h2 className="lab-section-title">
-                <Target size={16} />
-                Current Task
-              </h2>
-              <div className="lab-current-task-card lab-current-task-card--done">
-                <CheckCircle2 size={20} style={{ color: 'var(--success)' }} />
-                <p className="lab-task-name">All tasks completed!</p>
-              </div>
-            </div>
-          )}
+  <div className="lab-current-task-section">
+    <h2 className="lab-section-title">
+      <CheckCircle2 size={16} />
+      Challenge Complete
+    </h2>
+
+    <div className="lab-current-task-card lab-current-task-card--done">
+      <CheckCircle2
+        size={48}
+        style={{
+          color: 'var(--success)',
+          marginBottom: '12px',
+        }}
+      />
+
+      <p className="lab-task-name">
+        🎉 Challenge Completed!
+      </p>
+
+      <p className="lab-task-description">
+        You have successfully completed all {progress.totalTasks} tasks.
+      </p>
+
+      <div style={{ marginTop: '16px' }}>
+        <p>
+          <strong>Progress:</strong> {progress.percentage}%
+        </p>
+
+        <p>
+          <strong>Tasks Completed:</strong>{' '}
+          {progress.completedTasks}/{progress.totalTasks}
+        </p>
+      </div>
+
+      <button
+        className="btn-primary lab-validate-btn"
+        style={{ marginTop: '20px' }}
+        onClick={() => navigate('/challenges')}
+      >
+        Back to Challenges
+      </button>
+    </div>
+  </div>
+)}
         </div>
 
         {/* Right Panel: Terminal */}

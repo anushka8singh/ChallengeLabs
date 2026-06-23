@@ -14,6 +14,15 @@ import { SessionStatus } from '@prisma/client';
 
 const validationLogger = logger.child({ service: 'validation' });
 
+function sanitizeOutput(output?: string): string {
+  if (!output) return '';
+
+  return output
+    .replace(/\0/g, '')
+    .replace(/[^\x20-\x7E\r\n\t]/g, '')
+    .substring(0, 500);
+}
+
 export interface ValidationResult {
   passed: boolean;
   feedback: string;
@@ -119,11 +128,11 @@ export class ValidationService {
         sessionId,
         eventType: eventType as any,
         metadata: {
-          taskId,
-          taskTitle: task.title,
-          exitCode: validationResult.exitCode,
-          output: validationResult.output?.substring(0, 500),
-        },
+  taskId,
+  taskTitle: task.title,
+  exitCode: validationResult.exitCode,
+  output: sanitizeOutput(validationResult.output),
+},
       },
     });
 

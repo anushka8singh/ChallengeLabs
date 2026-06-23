@@ -46,6 +46,16 @@ export interface CurrentProgressResponse {
   data: ProgressData;
 }
 
+export interface CurrentSessionResponse {
+  success: boolean;
+  data: Session | null;
+}
+
+export interface SessionDetailsResponse {
+  success: boolean;
+  data: Session;
+}
+
 // ─── Service Functions ────────────────────────────────────────────────────────
 
 export const startSession = async (challengeId: string): Promise<StartSessionResponse> => {
@@ -55,6 +65,28 @@ export const startSession = async (challengeId: string): Promise<StartSessionRes
 
 export const getCurrentProgress = async (): Promise<CurrentProgressResponse> => {
   const res = await api.get<CurrentProgressResponse>('/api/progress/current');
+  return res.data;
+};
+
+export const getCurrentSession = async (): Promise<CurrentSessionResponse> => {
+  const res = await api.get<CurrentSessionResponse>('/api/sessions/current');
+  return res.data;
+};
+
+export const getSessionById = async (
+  sessionId: string
+): Promise<SessionDetailsResponse> => {
+  const res = await api.get<SessionDetailsResponse>(
+    `/api/sessions/${sessionId}`
+  );
+
+  return res.data;
+};
+
+
+export const stopSession = async () => {
+  const res = await api.post('/api/sessions/stop');
+
   return res.data;
 };
 

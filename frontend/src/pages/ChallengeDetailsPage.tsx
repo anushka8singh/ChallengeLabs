@@ -4,7 +4,7 @@ import { Clock, ArrowLeft, AlertCircle, PlayCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getChallengeBySlug } from '../services/challengeService';
 import type { ChallengeDetail } from '../services/challengeService';
-import { startSession } from '../services/sessionService';
+import { startSession, getCurrentSession } from '../services/sessionService';
 import DifficultyBadge from '../components/challenges/DifficultyBadge';
 import TaskChecklist from '../components/challenges/TaskChecklist';
 
@@ -33,10 +33,43 @@ const ChallengeDetailsPage = () => {
         toast.error('Failed to start lab session.');
       }
     } catch (err) {
-      const axiosErr = err as { response?: { data?: { message?: string } } };
-      const msg = axiosErr?.response?.data?.message;
-      toast.error(msg ?? 'Failed to start lab session. Please try again.');
-    } finally {
+  const axiosErr = err as {
+    response?: {
+      status?: number;
+      data?: {
+        message?: string;
+      };
+    };
+  };
+
+  const status = axiosErr?.response?.status;
+  const msg = axiosErr?.response?.data?.message;
+
+  // Active session already exists
+  if (status === 409) {
+    try {
+      const current = await getCurrentSession();
+
+      if (current.success && current.data) {
+        toast.success('Resuming existing lab session...');
+
+        navigate(`/lab/${current.data.id}`, {
+          state: {
+            expiresAt: current.data.expiresAt,
+            status: current.data.status,
+          },
+        });
+
+        return;
+      }
+    } catch {
+      toast.error('Could not resume existing session.');
+      return;
+    }
+  }
+
+  toast.error(msg ?? 'Failed to start lab session. Please try again.');
+}finally {
       setStartingLab(false);
     }
   };

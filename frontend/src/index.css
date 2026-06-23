@@ -1019,6 +1019,20 @@ input, textarea { font: inherit; }
   color: #c4b5fd;
   font-size: 0.9rem;
 }
+
+
+.lab-hint-toggle {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--primary);
+  font-weight: 600;
+  padding: 0;
+}
+
+.lab-hint-toggle:hover {
+  color: #c4b5fd; /* lighter purple */
+}
 /* ─── Skeleton Loaders ──────────────────────────────────────────────────────── */
 @keyframes shimmer {
   0%   { background-position: -400px 0; }

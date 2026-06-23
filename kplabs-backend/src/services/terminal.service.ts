@@ -99,10 +99,18 @@ async connectTerminal(
       socket,
     });
 
-    stream.on('data', (chunk: Buffer) => {
-      socket.emit('terminal:output', chunk.toString('utf8'));
-    });
+   stream.on('data', (chunk: Buffer) => {
+  let data = chunk;
 
+  if (data.length > 8) {
+    data = data.subarray(8);
+  }
+
+  socket.emit(
+    'terminal:output',
+    data.toString('utf8')
+  );
+});
     stream.on('error', (err: Error) => {
       console.error('STREAM ERROR');
       console.error(err);

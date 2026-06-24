@@ -9,6 +9,12 @@ import DashboardPage from './pages/DashboardPage';
 import ChallengePage from './pages/ChallengePage';
 import ChallengeDetailsPage from './pages/ChallengeDetailsPage';
 import LabWorkspacePage from './pages/LabWorkspacePage';
+import AdminDashboardPage from './pages/AdminDashboardPage';
+import AdminCreateChallengePage from './pages/AdminCreateChallengePage';
+import AdminChallengeTasksPage from './pages/AdminChallengeTasksPage';
+import AdminCreateTaskPage from './pages/AdminCreateTaskPage';
+import AdminEditChallengePage from './pages/AdminEditChallengePage';
+import AdminEditTaskPage from './pages/AdminEditTaskPage';
 
 function App() {
   return (
@@ -42,10 +48,23 @@ function App() {
 
             {/* Dashboard shell with sidebar */}
             <Route element={<DashboardLayout />}>
-              <Route path="/dashboard"            element={<DashboardPage />} />
-              <Route path="/challenges"           element={<ChallengePage />} />
-              <Route path="/challenges/:slug"     element={<ChallengeDetailsPage />} />
-            </Route>
+  <Route path="/dashboard" element={<DashboardPage />} />
+  <Route path="/challenges" element={<ChallengePage />} />
+  <Route path="/challenges/:slug" element={<ChallengeDetailsPage />} />
+  <Route path="/admin" element={<AdminDashboardPage />} />
+  <Route path="/admin/challenges/new" element={<AdminCreateChallengePage />} />
+  <Route path="/admin/challenges/:challengeId/tasks" element={<AdminChallengeTasksPage />} />
+  <Route path="/admin/challenges/:challengeId/tasks/new" element={<AdminCreateTaskPage />} />
+  <Route
+  path="/admin/challenges/:challengeId/edit"
+  element={<AdminEditChallengePage />}
+/>
+<Route
+  path="/admin/tasks/:taskId/edit"
+  element={<AdminEditTaskPage />}
+/>
+</Route>
+
           </Route>
 
           {/* Default redirect */}

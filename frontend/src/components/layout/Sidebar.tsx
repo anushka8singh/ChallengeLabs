@@ -1,5 +1,11 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, BookOpen, LogOut, Zap } from 'lucide-react';
+import {
+  LayoutDashboard,
+  BookOpen,
+  LogOut,
+  Zap,
+  ShieldCheck,
+} from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 const navItems = [
@@ -9,6 +15,7 @@ const navItems = [
 
 const Sidebar = () => {
   const { user, logout } = useAuth();
+  const isAdmin = user?.role === 'ADMIN';
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -41,6 +48,19 @@ const Sidebar = () => {
             <span>{label}</span>
           </NavLink>
         ))}
+        {isAdmin && (
+  <NavLink
+    to="/admin"
+    className={({ isActive }) =>
+      `sidebar-nav-item ${
+        isActive ? 'sidebar-nav-item--active' : ''
+      }`
+    }
+  >
+    <ShieldCheck size={16} />
+    <span>Admin</span>
+  </NavLink>
+)}
       </nav>
 
       {/* User Profile */}

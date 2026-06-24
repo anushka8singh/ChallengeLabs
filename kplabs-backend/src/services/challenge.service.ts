@@ -44,6 +44,21 @@ export class ChallengeService {
     return challengeRepository.findAllForAdmin();
   }
 
+  
+ async getChallengeByIdForAdmin(id: string) {
+  const challenge =
+    await challengeRepository.findById(id);
+
+  if (!challenge) {
+    throw new AppError(
+      'Challenge not found',
+      404
+    );
+  }
+
+  return challenge;
+}
+
   async createChallenge(data: CreateChallengeInput, userRole: string) {
     if (userRole !== 'ADMIN') {
       throw new AppError('Only admins can create challenges', 403);
@@ -90,7 +105,19 @@ export class ChallengeService {
 
     return challengeRepository.createTask(challengeId, data);
   }
+async getTaskById(taskId: string) {
+  const task =
+    await challengeRepository.findTaskById(taskId);
 
+  if (!task) {
+    throw new AppError(
+      'Task not found',
+      404
+    );
+  }
+
+  return task;
+}
   async updateTask(taskId: string, data: UpdateTaskInput, userRole: string) {
     if (userRole !== 'ADMIN') {
       throw new AppError('Only admins can update tasks', 403);

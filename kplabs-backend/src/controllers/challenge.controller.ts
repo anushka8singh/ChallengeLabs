@@ -56,6 +56,26 @@ export class ChallengeController {
     }
   }
 
+    async getChallengeByIdForAdmin(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const { id } = req.params;
+
+    const challenge =
+      await challengeService.getChallengeByIdForAdmin(id);
+
+    successResponse(
+      res,
+      challenge,
+      'Challenge retrieved successfully'
+    );
+  } catch (error) {
+    next(error);
+  }
+}
   async createChallenge(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const data = req.body as CreateChallengeInput;
@@ -107,6 +127,27 @@ export class ChallengeController {
     }
   }
 
+  async getTaskById(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const { id } = req.params;
+
+    const task =
+      await challengeService.getTaskById(id);
+
+    successResponse(
+      res,
+      task,
+      'Task retrieved successfully'
+    );
+  } catch (error) {
+    next(error);
+  }
+}
+
   async updateTask(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { id: taskId } = req.params;
@@ -131,6 +172,8 @@ export class ChallengeController {
       next(error);
     }
   }
+
+  
 }
 
 export const challengeController = new ChallengeController();

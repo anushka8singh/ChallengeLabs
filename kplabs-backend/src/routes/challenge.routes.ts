@@ -44,6 +44,11 @@ adminRouter.use(authorizeRole(['ADMIN']));
 // GET all challenges (admin view - includes unpublished)
 adminRouter.get('/', challengeController.getAllChallengesForAdmin);
 
+adminRouter.get(
+  '/:id',
+  challengeController.getChallengeByIdForAdmin
+);
+
 // Create challenge
 adminRouter.post(
   '/',
@@ -67,7 +72,10 @@ adminRouter.post(
   validateRequest(createTaskSchema),
   challengeController.createTask
 );
-
+adminRouter.get(
+  '/tasks/:id',
+  challengeController.getTaskById
+);
 // Update task
 adminRouter.put(
   '/tasks/:id',

@@ -9,6 +9,14 @@ export interface Session {
   status: string;
   startedAt: string;
   expiresAt: string;
+  challenge?: {
+    id: string;
+    title: string;
+    slug: string;
+    description: string;
+    difficulty: string;
+    estimatedMinutes: number;
+  };
 }
 
 export interface StartSessionResponse {
@@ -39,12 +47,34 @@ export interface ProgressData {
   percentage: number;
   currentTask: CurrentTask | null;
   lastValidatedAt?: string | null;
+  isCompleted: boolean;
 }
 
 export interface CurrentProgressResponse {
   success: boolean;
   data: ProgressData;
 }
+export interface CompletedChallenge {
+  challengeId: string;
+  title: string;
+  slug: string;
+  difficulty: string;
+  estimatedMinutes: number;
+  completedAt: string;
+  attempts: number;
+}
+
+export interface CompletedChallengesResponse {
+  success: boolean;
+  data: {
+    completedChallenges: CompletedChallenge[];
+    stats: {
+      completed: number;
+    };
+  };
+}
+
+
 
 export interface CurrentSessionResponse {
   success: boolean;
@@ -63,11 +93,20 @@ export const startSession = async (challengeId: string): Promise<StartSessionRes
   return res.data;
 };
 
+
 export const getCurrentProgress = async (): Promise<CurrentProgressResponse> => {
   const res = await api.get<CurrentProgressResponse>('/api/progress/current');
   return res.data;
 };
+export const getCompletedChallenges =
+  async (): Promise<CompletedChallengesResponse> => {
+    const res =
+      await api.get<CompletedChallengesResponse>(
+        '/api/progress/completed'
+      );
 
+    return res.data;
+  };
 export const getCurrentSession = async (): Promise<CurrentSessionResponse> => {
   const res = await api.get<CurrentSessionResponse>('/api/sessions/current');
   return res.data;

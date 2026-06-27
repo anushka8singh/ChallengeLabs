@@ -26,14 +26,43 @@ export class SessionService {
       throw new AppError('Challenge not found or not available', 404);
     }
 
+    
     // 2. Check if user already has an active session for this challenge
-    const existingSession = await sessionRepository.findActiveSessionByUserAndChallenge(
-      userId,
-      challengeId
-    );
-    if (existingSession) {
-      throw new AppError('You already have an active session for this challenge', 409);
-    }
+    // 2. Check for any active session
+const activeSession =
+  await sessionRepository.findActiveSessionByUser(
+    userId
+  );
+
+// User already has an active session
+if (activeSession) {
+
+  // Same challenge -> resume
+  if (
+    activeSession.challengeId ===
+    challengeId
+  ) {
+    return {
+      session: activeSession,
+      containerId: activeSession.containerId,
+      expiresAt: activeSession.expiresAt,
+      resumed: true,
+    };
+  }
+
+  // Different challenge -> ask frontend
+  throw new AppError(
+    JSON.stringify({
+      code: 'SESSION_CONFLICT',
+      currentSessionId: activeSession.id,
+      currentChallengeId:
+        activeSession.challengeId,
+      currentChallengeTitle:
+        activeSession.challenge.title,
+    }),
+    409
+  );
+}
 
     // 3. Check Docker availability
     const dockerAvailable = await dockerService.isDockerAvailable();
@@ -111,6 +140,7 @@ export class SessionService {
     }
   }
 
+  
   /**
    * Get current active session for user
    */

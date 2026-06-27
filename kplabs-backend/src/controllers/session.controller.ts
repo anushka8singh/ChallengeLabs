@@ -21,7 +21,7 @@ export class SessionController {
       next(error);
     }
   }
-
+ 
   async getCurrentSession(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const userId = req.user!.userId;

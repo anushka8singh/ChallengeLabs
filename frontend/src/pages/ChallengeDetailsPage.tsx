@@ -4,7 +4,13 @@ import { Clock, ArrowLeft, AlertCircle, PlayCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getChallengeBySlug } from '../services/challengeService';
 import type { ChallengeDetail } from '../services/challengeService';
-import { startSession, getCurrentSession } from '../services/sessionService';
+import {
+  startSession,
+  stopSession,
+  getCurrentSession,
+} from '../services/sessionService';
+
+import ConfirmationModal from '../components/common/ConfirmationModal';
 import DifficultyBadge from '../components/challenges/DifficultyBadge';
 import TaskChecklist from '../components/challenges/TaskChecklist';
 
@@ -15,6 +21,13 @@ const ChallengeDetailsPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [startingLab, setStartingLab] = useState(false);
+const [showSessionModal, setShowSessionModal] = useState(false);
+
+const [currentLabTitle, setCurrentLabTitle] = useState("");
+
+const [pendingChallengeId, setPendingChallengeId] =
+  useState<string | null>(null);
+
 
   const handleStartLab = async () => {
     if (!challenge || startingLab) return;
@@ -47,32 +60,99 @@ const ChallengeDetailsPage = () => {
 
   // Active session already exists
   if (status === 409) {
-    try {
-      const current = await getCurrentSession();
 
-      if (current.success && current.data) {
-        toast.success('Resuming existing lab session...');
+  try {
 
-        navigate(`/lab/${current.data.id}`, {
-          state: {
-            expiresAt: current.data.expiresAt,
-            status: current.data.status,
-          },
-        });
+    const current =
+      await getCurrentSession();
 
-        return;
-      }
-    } catch {
-      toast.error('Could not resume existing session.');
+    if (current.success && current.data) {
+
+      setCurrentLabTitle(
+        current.data.challenge?.title ??
+        "Unknown Challenge"
+      );
+
+      setPendingChallengeId(challenge.id);
+
+      setShowSessionModal(true);
+
       return;
+
     }
+
+  } catch {
+
+    toast.error(
+      "Unable to load current session."
+    );
+
+    return;
+
   }
+
+}
 
   toast.error(msg ?? 'Failed to start lab session. Please try again.');
 }finally {
       setStartingLab(false);
     }
   };
+
+
+  const handleConfirmStartNewLab =
+  async () => {
+
+    if (!pendingChallengeId) return;
+
+    try {
+
+      setStartingLab(true);
+
+      try {
+        await stopSession();
+      } catch (err: any) {
+        if (err?.response?.status !== 404) {
+          throw err;
+        }
+      }
+
+      const res =
+        await startSession(
+          pendingChallengeId
+        );
+
+      toast.success(
+        "Lab started."
+      );
+
+      navigate(
+        `/lab/${res.data.session.id}`,
+        {
+          state: {
+            expiresAt:
+              res.data.expiresAt,
+            status:
+              res.data.session.status,
+          },
+        }
+      );
+
+    } catch (err: any) {
+
+      toast.error(
+        err?.response?.data?.message ??
+        "Unable to start lab."
+      );
+
+    } finally {
+
+      setShowSessionModal(false);
+      setPendingChallengeId(null);
+      setStartingLab(false);
+
+    }
+};
 
   useEffect(() => {
     if (!slug) return;
@@ -170,6 +250,21 @@ const ChallengeDetailsPage = () => {
           <TaskChecklist tasks={challenge.tasks} />
         </div>
       )}
+
+      <ConfirmationModal
+  isOpen={showSessionModal}
+  title="Active Lab Session"
+  currentLabTitle={currentLabTitle}
+  description="You can only run one challenge at a time. Starting this challenge will automatically stop your current lab session."
+  confirmText="Stop & Start New Lab"
+  cancelText="Cancel"
+  loading={startingLab}
+  onCancel={() => {
+    setShowSessionModal(false);
+    setPendingChallengeId(null);
+  }}
+  onConfirm={handleConfirmStartNewLab}
+/>
     </div>
   );
 };

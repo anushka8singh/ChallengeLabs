@@ -1582,3 +1582,184 @@ input, textarea { font: inherit; }
   width: 100%;
 }
 
+/* ─── Admin Custom Styles ─── */
+.admin-card-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+  border-top: 1px solid var(--border);
+  padding-top: 14px;
+}
+
+.btn-danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: var(--surface-2);
+  color: var(--error);
+  font-size: 14px;
+  font-weight: 500;
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  transition: background 150ms, border-color 150ms;
+}
+
+.btn-danger:hover {
+  background: color-mix(in srgb, var(--error) 12%, transparent);
+  border-color: color-mix(in srgb, var(--error) 28%, transparent);
+}
+
+.btn-danger-sm {
+  padding: 6px 12px;
+  font-size: 13px;
+  min-height: 34px;
+}
+
+.btn-secondary-sm {
+  padding: 6px 12px;
+  font-size: 13px;
+  min-height: 34px;
+}
+
+.btn-primary-sm {
+  padding: 6px 12px;
+  font-size: 13px;
+  min-height: 34px;
+}
+
+.admin-form-container {
+  max-width: 680px;
+  margin: 0 auto;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 32px;
+}
+
+.admin-form-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.admin-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  user-select: none;
+}
+
+.admin-checkbox {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.completed-actions {
+    margin-top: 20px;
+}
+
+.completed-retry-btn {
+    width: 100%;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.65);
+
+  display:flex;
+  justify-content:center;
+  align-items:center;
+
+  z-index:9999;
+}
+
+.confirmation-modal{
+
+  width:430px;
+  max-width:92%;
+
+  background:#17181c;
+
+  border:1px solid #2a2d34;
+
+  border-radius:14px;
+
+  padding:24px;
+}
+
+.confirmation-modal h2{
+
+  font-size:20px;
+
+  margin-bottom:14px;
+}
+
+.confirmation-modal p{
+
+  color:#a5acb8;
+
+  line-height:1.6;
+
+  margin-bottom:24px;
+}
+
+.modal-actions{
+
+  display:flex;
+
+  justify-content:flex-end;
+
+  gap:12px;
+}
+
+.modal-section-title{
+
+    margin-top:18px;
+
+    margin-bottom:8px;
+
+    font-size:13px;
+
+    font-weight:600;
+
+    color:#9ca3af;
+
+    text-transform:uppercase;
+
+    letter-spacing:.05em;
+}
+
+.current-lab-box{
+
+    background:#111827;
+
+    border:1px solid #374151;
+
+    border-radius:10px;
+
+    padding:14px 16px;
+
+    font-weight:600;
+
+    color:white;
+
+    margin-bottom:22px;
+}
+
+.modal-description{
+
+    color:#cbd5e1;
+
+    line-height:1.7;
+
+    margin-bottom:24px;
+}

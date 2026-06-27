@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 import {
@@ -87,143 +88,166 @@ const AdminEditChallengePage = () => {
 
   if (loading) {
     return (
-      <div>
-        Loading challenge...
+      <div className="error-state">
+        <div className="btn-spinner" style={{ width: '24px', height: '24px' }} />
+        <p style={{ marginTop: '12px' }}>Loading challenge...</p>
       </div>
     );
   }
 
   return (
-    <div>
-      <h1>Edit Challenge</h1>
+    <div style={{ maxWidth: '680px', margin: '0 auto' }}>
+      <button onClick={() => navigate('/admin')} className="back-btn" style={{ marginBottom: '24px' }}>
+        <ArrowLeft size={14} /> Back to dashboard
+      </button>
 
-     <form onSubmit={handleSubmit}>
+      <div className="admin-form-container" style={{ maxWidth: '100%' }}>
+        <h2 className="dashboard-welcome-title" style={{ fontSize: '20px', marginBottom: '24px' }}>
+          Edit Challenge
+        </h2>
 
-     <input
-          placeholder="Title"
-          value={form.title}
-          onChange={(e) =>
-            setForm({
-              ...form,
-              title: e.target.value,
-            })
-          }
-        />
+        <form onSubmit={handleSubmit} className="auth-form">
+          <div className="form-group">
+            <label className="form-label">Title</label>
+            <input
+              type="text"
+              className="form-input"
+              placeholder="e.g. Linux File Permissions"
+              value={form.title}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  title: e.target.value,
+                })
+              }
+              required
+            />
+          </div>
 
-        <br />
-        <br />
+          <div className="form-group">
+            <label className="form-label">Slug</label>
+            <input
+              type="text"
+              className="form-input"
+              placeholder="e.g. linux-file-permissions"
+              value={form.slug}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  slug: e.target.value,
+                })
+              }
+              required
+            />
+          </div>
 
-        <input
-          placeholder="Slug"
-          value={form.slug}
-          onChange={(e) =>
-            setForm({
-              ...form,
-              slug: e.target.value,
-            })
-          }
-        />
+          <div className="form-group">
+            <label className="form-label">Description</label>
+            <textarea
+              className="form-input"
+              style={{ minHeight: '120px', resize: 'vertical' }}
+              placeholder="Describe what the student will learn in this challenge..."
+              value={form.description}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  description: e.target.value,
+                })
+              }
+              required
+            />
+          </div>
 
-        <br />
-        <br />
+          <div className="form-group">
+            <label className="form-label">Difficulty</label>
+            <select
+              className="form-input"
+              style={{ cursor: 'pointer' }}
+              value={form.difficulty}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  difficulty:
+                    e.target.value as CreateChallengePayload['difficulty'],
+                })
+              }
+            >
+              <option value="BEGINNER">Beginner</option>
+              <option value="INTERMEDIATE">Intermediate</option>
+              <option value="ADVANCED">Advanced</option>
+            </select>
+          </div>
 
-        <textarea
-          placeholder="Description"
-          value={form.description}
-          onChange={(e) =>
-            setForm({
-              ...form,
-              description: e.target.value,
-            })
-          }
-        />
+          <div className="form-group">
+            <label className="form-label">Docker Image</label>
+            <input
+              type="text"
+              className="form-input"
+              placeholder="e.g. ubuntu:22.04"
+              value={form.dockerImage}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  dockerImage: e.target.value,
+                })
+              }
+              required
+            />
+          </div>
 
-        <br />
-        <br />
+          <div className="form-group">
+            <label className="form-label">Estimated Minutes</label>
+            <input
+              type="number"
+              className="form-input"
+              placeholder="30"
+              value={form.estimatedMinutes}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  estimatedMinutes: Number(e.target.value),
+                })
+              }
+              required
+            />
+          </div>
 
-        <select
-          value={form.difficulty}
-          onChange={(e) =>
-            setForm({
-              ...form,
-              difficulty:
-                e.target.value as CreateChallengePayload['difficulty'],
-            })
-          }
-        >
-          <option value="BEGINNER">
-            Beginner
-          </option>
+          <div className="form-group">
+            <label className="admin-checkbox-label">
+              <input
+                type="checkbox"
+                className="admin-checkbox"
+                checked={form.isPublished}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    isPublished: e.target.checked,
+                  })
+                }
+              />
+              <span>Published (visible to students)</span>
+            </label>
+          </div>
 
-          <option value="INTERMEDIATE">
-            Intermediate
-          </option>
-
-          <option value="ADVANCED">
-            Advanced
-          </option>
-        </select>
-
-        <br />
-        <br />
-
-        <input
-          placeholder="Docker Image"
-          value={form.dockerImage}
-          onChange={(e) =>
-            setForm({
-              ...form,
-              dockerImage: e.target.value,
-            })
-          }
-        />
-
-        <br />
-        <br />
-
-        <input
-          type="number"
-          placeholder="Estimated Minutes"
-          value={form.estimatedMinutes}
-          onChange={(e) =>
-            setForm({
-              ...form,
-              estimatedMinutes:
-                Number(e.target.value),
-            })
-          }
-        />
-
-        <br />
-        <br />
-
-        <label>
-          <input
-            type="checkbox"
-            checked={form.isPublished}
-            onChange={(e) =>
-              setForm({
-                ...form,
-                isPublished:
-                  e.target.checked,
-              })
-            }
-          />
-          Published
-        </label>
-
-        <br />
-        <br />
-
-        <button
-          type="submit"
-          disabled={saving}
-        >
-          {saving
-  ? 'Saving...'
-  : 'Save Changes'}
-        </button>
-      </form>
+          <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '12px' }}>
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={() => navigate('/admin')}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="btn-primary"
+              disabled={saving}
+              style={{ minWidth: '140px' }}
+            >
+              {saving ? <span className="btn-spinner" /> : 'Save Changes'}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 };

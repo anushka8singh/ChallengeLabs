@@ -1,5 +1,5 @@
 import XTermTerminal from '../components/lab/XTermTerminal';
-import { useEffect, useState, useRef ,useCallback } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, AlertCircle, Clock, CheckCircle2, Target, Layers, Terminal as TerminalIcon, Play, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';

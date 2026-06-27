@@ -56,16 +56,36 @@ export class CommandValidationStrategy implements IValidationStrategy {
     }
 
     try {
-      const result = await dockerService.execInContainer(containerId, validationRule);
-      const passed = result.exitCode === 0;
+      const result = await dockerService.execInContainer(
+  containerId,
+  validationRule
+);
 
-      let feedback = expectedOutcome || `Command executed: ${validationRule}`;
-      if (!passed) {
-        feedback = `Validation failed (exit code ${result.exitCode}). Output: ${result.output || 'No output'}`;
-        if (expectedOutcome) feedback += ` | Expected: ${expectedOutcome}`;
-      } else {
-        feedback = expectedOutcome || `Validation passed successfully`;
-      }
+const output = result.output ?? '';
+
+let passed = result.exitCode === 0;
+
+// If an expected output is provided,
+// ensure it exists in the command output.
+if (
+  passed &&
+  expectedOutcome &&
+  expectedOutcome.trim() !== ''
+) {
+  passed = output.includes(expectedOutcome);
+}
+
+let feedback: string;
+
+if (!passed) {
+  feedback = `Validation failed (exit code ${result.exitCode}). Output: ${output || 'No output'}`;
+
+  if (expectedOutcome) {
+    feedback += ` | Expected output: ${expectedOutcome}`;
+  }
+} else {
+  feedback = 'Validation passed successfully';
+}
 
       return {
         passed,
@@ -96,7 +116,37 @@ export class ValidationService {
   async validateTask(taskId: string, sessionId: string, userId: string): Promise<any> {
     const task = await challengeRepository.findTaskById(taskId);
     if (!task) throw new AppError('Task not found', 404);
+// ===========================================
+// Prevent duplicate successful validations
+// ===========================================
 
+const existingPassedValidation =
+  await prisma.validationResult.findFirst({
+    where: {
+      sessionId,
+      taskId,
+      passed: true,
+    },
+  });
+
+if (existingPassedValidation) {
+  return {
+    validationResult:
+      existingPassedValidation,
+
+    passed: true,
+
+    feedback:
+      'Task already completed.',
+
+    task: {
+      id: task.id,
+      title: task.title,
+    },
+
+    alreadyCompleted: true,
+  };
+}
     const session = await sessionRepository.findById(sessionId);
     if (!session) throw new AppError('Session not found', 404);
     if (session.userId !== userId) throw new AppError('Unauthorized access to this session', 403);

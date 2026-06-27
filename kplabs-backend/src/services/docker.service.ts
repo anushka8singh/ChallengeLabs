@@ -232,6 +232,15 @@ export class DockerService {
     userId: string,
     challengeId: string
   ): Promise<{ containerId: string; containerName: string }> {
+
+    // Ensure Docker image exists locally before creating the container
+  await this.pullImage(image);
+
+  logger.info(
+    { image },
+    'Docker image verified successfully'
+  );
+  
     const timestamp = Date.now();
     const shortUserId = userId.substring(0, 8);
     const containerName = `kplabs-${shortUserId}-${timestamp}`;

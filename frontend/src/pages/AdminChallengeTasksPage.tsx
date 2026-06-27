@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { useNavigate } from 'react-router-dom';
+import {
+  useParams,
+  useNavigate,
+  useLocation,
+} from 'react-router-dom';
+import { ArrowLeft, Plus, Edit, Trash2 } from 'lucide-react';
 import {
   getChallengeTasks,
   type AdminTask,
@@ -12,26 +16,34 @@ import { deleteTask } from '../services/adminService';
 const AdminChallengeTasksPage = () => {
   const { challengeId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [tasks, setTasks] =
     useState<AdminTask[]>([]);
 
   const [loading, setLoading] =
     useState(true);
+const loadTasks = async () => {
+  if (!challengeId) return;
 
+  try {
+    setLoading(true);
+
+    const res = await getChallengeTasks(challengeId);
+
+    if (res.success) {
+      setTasks(res.data);
+    }
+  } finally {
+    setLoading(false);
+  }
+};
   useEffect(() => {
-    if (!challengeId) return;
-
-    getChallengeTasks(challengeId)
-      .then((res) => {
-        if (res.success) {
-          setTasks(res.data);
-        }
-      })
-      .finally(() =>
-        setLoading(false)
-      );
-  }, [challengeId]);
+  loadTasks();
+}, [
+  challengeId,
+  location.state,
+]);
 
   const handleDeleteTask = async (
   taskId: string
@@ -56,82 +68,88 @@ const AdminChallengeTasksPage = () => {
 };
 
   if (loading) {
-    return <div>Loading tasks...</div>;
+    return (
+      <div className="error-state">
+        <div className="btn-spinner" style={{ width: '24px', height: '24px' }} />
+        <p style={{ marginTop: '12px' }}>Loading tasks...</p>
+      </div>
+    );
   }
 
   return (
-    <div>
-      <h1>Manage Tasks</h1>
+    <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+        <button onClick={() => navigate('/admin')} className="back-btn">
+          <ArrowLeft size={14} /> Back to dashboard
+        </button>
 
-      <p>
-        Total Tasks: {tasks.length}
-      </p>
-
-      <hr />
         <button
-  onClick={() =>
-    navigate(
-      `/admin/challenges/${challengeId}/tasks/new`
-    )
-  }
-  style={{
-    marginBottom: '20px',
-    padding: '10px 16px',
-    cursor: 'pointer',
-  }}
->
-  + Create Task
-</button>
-      {tasks.map((task) => (
-        <div
-          key={task.id}
-          style={{
-            border: '1px solid #333',
-            padding: '12px',
-            marginBottom: '12px',
-          }}
+          onClick={() => navigate(`/admin/challenges/${challengeId}/tasks/new`)}
+          className="btn-primary"
         >
-          <h3>
-            {task.order}. {task.title}
-          </h3>
+          <Plus size={16} /> Create Task
+        </button>
+      </div>
 
-          <p>
-            {task.description}
-          </p>
+      <div className="dashboard-welcome" style={{ marginBottom: '24px' }}>
+        <h2 className="dashboard-welcome-title">Manage Tasks</h2>
+        <p className="dashboard-welcome-sub">
+          Configure tasks for this challenge. Total tasks: <span className="text-accent" style={{ fontWeight: 600 }}>{tasks.length}</span>
+        </p>
+      </div>
 
-          {task.hint && (
-  <p>
-    Hint:
-    {' '}
-    {task.hint}
-  </p>
-)}
-<button
-  onClick={() =>
-    navigate(
-      `/admin/tasks/${task.id}/edit`
-    )
-  }
-  style={{
-    marginRight: '10px',
-    cursor: 'pointer',
-  }}
->
-  Edit Task
-</button>
-<button
-  onClick={() =>
-    handleDeleteTask(task.id)
-  }
-  style={{
-    marginTop: '10px',
-    cursor: 'pointer',
-  }}
->
-  Delete Task
-</button>
+      {tasks.length === 0 ? (
+        <div className="empty-state">
+          <p className="empty-state-title">No tasks configured</p>
+          <p className="empty-state-sub">Create your first task to get started.</p>
         </div>
-      ))}
+      ) : (
+        <div className="task-list">
+          {tasks.map((task) => (
+            <div key={task.id} className="task-item">
+              <div className="task-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div style={{ display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
+                  <div className="task-number" style={{ marginTop: '2px' }}>
+                    {task.order}
+                  </div>
+                  <div className="task-body">
+                    <h3 className="task-title" style={{ fontSize: '15px' }}>{task.title}</h3>
+                    <p className="task-description">{task.description}</p>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+                  <button
+                    onClick={() => navigate(`/admin/tasks/${task.id}/edit`)}
+                    className="btn-secondary btn-secondary-sm"
+                    title="Edit Task"
+                  >
+                    <Edit size={14} />
+                  </button>
+                  <button
+                    onClick={() => handleDeleteTask(task.id)}
+                    className="btn-danger btn-danger-sm"
+                    title="Delete Task"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              </div>
+
+              {task.hint && (
+                <div className="task-hint-wrapper">
+                  <div className="task-hint-text">
+                    <span style={{ fontWeight: 600, color: 'var(--warning)', display: 'block', marginBottom: '4px' }}>
+                      Hint:
+                    </span>
+                    {task.hint}
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

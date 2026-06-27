@@ -4,6 +4,7 @@ import { BookOpen, Clock, TrendingUp, ArrowRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { getChallenges } from '../services/challengeService';
 import type { Challenge } from '../services/challengeService';
+import { getCompletedChallenges } from '../services/sessionService';
 import DifficultyBadge from '../components/challenges/DifficultyBadge';
 
 const DashboardPage = () => {
@@ -11,18 +12,29 @@ const DashboardPage = () => {
   const navigate = useNavigate();
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [loading, setLoading] = useState(true);
+  const [completedCount, setCompletedCount] = useState<number | string>('—');
+  const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     getChallenges()
       .then((res) => res.success && setChallenges(res.data))
       .catch(() => {})
       .finally(() => setLoading(false));
+
+    getCompletedChallenges()
+      .then((res) => {
+        if (res.success) {
+          setCompletedCount(res.data.stats.completed);
+          setCompletedIds(new Set(res.data.completedChallenges.map((c) => c.challengeId)));
+        }
+      })
+      .catch(() => {});
   }, []);
 
   const stats = [
     {
-      label: 'Total Challenges',
-      value: loading ? '—' : challenges.length,
+      label: 'Completed Challenges',
+      value: loading ? '—' : completedCount,
       icon: BookOpen,
       color: 'stat-icon--purple',
     },
@@ -104,8 +116,15 @@ const DashboardPage = () => {
                 tabIndex={0}
                 onKeyDown={(e) => e.key === 'Enter' && navigate(`/challenges/${c.slug}`)}
               >
-                <div className="recent-card-header">
-                  <DifficultyBadge difficulty={c.difficulty} />
+                <div className="recent-card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <DifficultyBadge difficulty={c.difficulty} />
+                    {completedIds.has(c.id) && (
+                      <span className="badge badge--completed" style={{ fontSize: '11px', padding: '2px 8px' }}>
+                        ✓ Completed
+                      </span>
+                    )}
+                  </div>
                   <span className="recent-card-time">
                     <Clock size={12} /> {c.estimatedMinutes}m
                   </span>
@@ -121,3 +140,6 @@ const DashboardPage = () => {
 };
 
 export default DashboardPage;
+
+
+

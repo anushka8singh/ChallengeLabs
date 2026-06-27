@@ -4,13 +4,20 @@
 // ===========================================
 
 import { Router } from 'express';
-import { taskController } from '../controllers/task.controller';
+import { progressController } from '../controllers/progress.controller';
 import { authenticate } from '../middleware/auth.middleware';
 
 const router = Router();
 
 router.use(authenticate);
 
-router.get('/current', taskController.getCurrentProgress);
+router.get(
+  '/current',
+  progressController.getCurrentProgress
+);
+router.get(
+  '/completed',
+  progressController.getCompletedChallenges
+);
 
 export default router;

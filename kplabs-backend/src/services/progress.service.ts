@@ -23,6 +23,7 @@ export interface ProgressData {
   order: number;
 } | null;
   lastValidatedAt: string | null;
+  isCompleted: boolean;
 }
 
 export class ProgressService {
@@ -46,6 +47,7 @@ export class ProgressService {
         percentage: 100,
         currentTask: null,
         lastValidatedAt: null,
+        isCompleted: true,
       };
     }
 
@@ -67,6 +69,8 @@ export class ProgressService {
       ? passedValidations[0].createdAt.toISOString() 
       : null;
 
+    const isCompleted = completedTasks >= totalTasks && totalTasks > 0;
+
     return {
       sessionId: session.id,
       challengeId: challenge.id,
@@ -84,8 +88,65 @@ export class ProgressService {
     }
   : null,
       lastValidatedAt,
+      isCompleted,
     };
   }
-}
+
+  async getCompletedChallenges(userId: string) {
+
+    const completedEvents =
+      await prisma.analyticsEvent.findMany({
+        where: {
+          userId,
+          eventType: 'CHALLENGE_COMPLETED',
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+        include: {
+          challenge: {
+            select: {
+              id: true,
+              title: true,
+              slug: true,
+              difficulty: true,
+              estimatedMinutes: true,
+            },
+          },
+        },
+      });
+
+    const completedMap = new Map();
+
+    for (const event of completedEvents) {
+      if (!event.challenge) continue;
+
+      const challengeId = event.challenge.id;
+
+      if (!completedMap.has(challengeId)) {
+        completedMap.set(challengeId, {
+          challengeId,
+          title: event.challenge.title,
+          slug: event.challenge.slug,
+          difficulty: event.challenge.difficulty,
+          estimatedMinutes: event.challenge.estimatedMinutes,
+          completedAt: event.createdAt,
+          attempts: 1,
+        });
+      } else {
+        completedMap.get(challengeId).attempts++;
+      }
+    }
+
+    return {
+      completedChallenges: Array.from(completedMap.values()),
+      stats: {
+        completed: completedMap.size,
+      },
+    };
+  }
+
+} 
+
 
 export const progressService = new ProgressService();

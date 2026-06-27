@@ -2,6 +2,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
   BookOpen,
+  CheckCircle2,
   LogOut,
   Zap,
   ShieldCheck,
@@ -9,8 +10,21 @@ import {
 import { useAuth } from '../../context/AuthContext';
 
 const navItems = [
-  { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { to: '/challenges', label: 'Challenges', icon: BookOpen },
+  {
+    to: '/dashboard',
+    label: 'Dashboard',
+    icon: LayoutDashboard,
+  },
+  {
+    to: '/challenges',
+    label: 'Challenges',
+    icon: BookOpen,
+  },
+  {
+    to: '/completed',
+    label: 'Completed',
+    icon: CheckCircle2,
+  },
 ];
 
 const Sidebar = () => {

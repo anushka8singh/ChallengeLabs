@@ -11,7 +11,8 @@ import {
 } from '../services/sessionService';
 import { terminalSocketService } from '../services/terminalSocketService';
 import type { ProgressData } from '../services/sessionService';
-
+import LabActionOverlay from "../components/common/LabActionOverlay";
+import ConfirmationModal from '../components/common/ConfirmationModal';
 // Shape of the router state passed from ChallengeDetailsPage after startSession
 interface LabLocationState {
   expiresAt?: string;
@@ -77,11 +78,12 @@ const [timeRemaining, setTimeRemaining] = useState('');
   const [connecting, setConnecting] = useState<boolean>(true);
   const [terminalError, setTerminalError] = useState<string | null>(null);
   const terminalWriteRef = useRef<(data: string) => void>(() => {});
+  const [stoppingLab, setStoppingLab] = useState(false);
   // Task validation state
   const [validating, setValidating] = useState<boolean>(false);
 const [showHint, setShowHint] = useState(false);
   const hasExpiredRef = useRef(false);
-
+const [showStopModal, setShowStopModal] = useState(false);
   // Auto-scroll terminal output
  
 
@@ -206,23 +208,30 @@ const [showHint, setShowHint] = useState(false);
   }, [sessionId]);
 
   const handleBack = () => navigate('/challenges');
-  const handleStopSession = async () => {
-  const confirmed = window.confirm(
-    'Are you sure you want to stop this lab session?'
-  );
 
-  if (!confirmed) return;
+  const handleStopSession = async () => {
+   setShowStopModal(false);
+  setStoppingLab(true);
 
   try {
     await stopSession();
 
-    toast.success('Session stopped successfully');
+    toast.success("Session stopped successfully");
 
-    navigate('/challenges');
+    navigate("/dashboard");
+
   } catch (error) {
-    toast.error('Failed to stop session');
+
+    toast.error("Failed to stop session");
+
+  } finally {
+
+    setStoppingLab(false);
+
   }
 };
+
+
 
   // Command submit handler
   
@@ -273,8 +282,8 @@ const [showHint, setShowHint] = useState(false);
         {sessionInfo.status || 'RUNNING'}
       </div>
       <button
-  className="btn-secondary"
-  onClick={handleStopSession}
+  className="btn-stop-session"
+  onClick={() => setShowStopModal(true)}
   style={{
     marginLeft: '12px',
   }}
@@ -316,28 +325,13 @@ const [showHint, setShowHint] = useState(false);
         <div className="lab-left-panel">
           {/* ── Info Cards ─────────────────────────────────────────────────── */}
           <div className="lab-info-grid">
-            {/* Session ID */}
-            <div className="lab-info-card">
-              <span className="lab-info-card-label">Session ID</span>
-              <span className="lab-info-card-value lab-info-card-value--mono">
-                {sessionId}
-              </span>
-            </div>
-
-            {/* Status */}
-            <div className="lab-info-card">
-              <span className="lab-info-card-label">Status</span>
-              <div className={`lab-status-badge lab-status-badge--${(sessionInfo.status || 'RUNNING').toLowerCase()} lab-status-inline`}>
-                <span className="lab-status-dot" />
-                {sessionInfo.status || 'RUNNING'}
-              </div>
-            </div>
+            
 
             {/* Expiry */}
             <div className="lab-info-card">
               <span className="lab-info-card-label">
                 <Clock size={12} />
-                Expires At
+                Expires in
               </span>
               <span className="lab-info-card-value"> {timeRemaining || formatExpiry(sessionInfo.expiresAt)}</span>
             </div>
@@ -462,7 +456,7 @@ const [showHint, setShowHint] = useState(false);
       />
 
       <p className="lab-task-name">
-        🎉 Challenge Completed!
+        Challenge Completed!
       </p>
 
       <p className="lab-task-description">
@@ -544,6 +538,22 @@ const [showHint, setShowHint] = useState(false);
         </div>
 
       </div>
+      <LabActionOverlay
+  open={stoppingLab}
+  title="Stopping Lab Session"
+  description="Please wait while we stop your lab environment. You will be redirected to the dashboard shortly."
+/>
+
+<ConfirmationModal
+  isOpen={showStopModal}
+  title="Stop Lab Session"
+  description="Your lab container will be stopped and you will be returned to the dashboard."
+  confirmText="Stop Lab"
+  cancelText="Cancel"
+  loading={stoppingLab}
+  onCancel={() => setShowStopModal(false)}
+  onConfirm={handleStopSession}
+/>
     </div>
   );
 };

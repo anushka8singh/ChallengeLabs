@@ -9,13 +9,16 @@ import {
   stopSession,
   getCurrentSession,
 } from '../services/sessionService';
-
 import ConfirmationModal from '../components/common/ConfirmationModal';
 import DifficultyBadge from '../components/challenges/DifficultyBadge';
 import TaskChecklist from '../components/challenges/TaskChecklist';
 
+
+
+
 const ChallengeDetailsPage = () => {
   const { slug } = useParams<{ slug: string }>();
+
   const navigate = useNavigate();
   const [challenge, setChallenge] = useState<ChallengeDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -27,9 +30,14 @@ const [currentLabTitle, setCurrentLabTitle] = useState("");
 
 const [pendingChallengeId, setPendingChallengeId] =
   useState<string | null>(null);
-
+const [resumeSessionId, setResumeSessionId] =
+  useState<string | null>(null);
 
   const handleStartLab = async () => {
+    if (resumeSessionId) {
+  navigate(`/lab/${resumeSessionId}`);
+  return;
+}
     if (!challenge || startingLab) return;
     setStartingLab(true);
     try {
@@ -158,10 +166,43 @@ const [pendingChallengeId, setPendingChallengeId] =
     if (!slug) return;
     setLoading(true);
     getChallengeBySlug(slug)
-      .then((res) => {
-        if (res.success) setChallenge(res.data);
-        else setError('Challenge not found.');
-      })
+      .then(async (res) => {
+
+  if (!res.success) {
+    setError("Challenge not found.");
+    return;
+  }
+
+  setChallenge(res.data);
+
+  try {
+
+    const current =
+      await getCurrentSession();
+
+    if (
+      current.success &&
+      current.data &&
+      current.data.challenge?.id === res.data.id
+    ) {
+
+      setResumeSessionId(
+        current.data.id
+      );
+
+    } else {
+
+      setResumeSessionId(null);
+
+    }
+
+  } catch {
+
+    setResumeSessionId(null);
+
+  }
+
+})
       .catch(() => setError('Could not load this challenge. Please try again.'))
       .finally(() => setLoading(false));
   }, [slug]);
@@ -222,7 +263,11 @@ const [pendingChallengeId, setPendingChallengeId] =
         {/* Start Lab CTA */}
         <button
           id="start-lab-btn"
-          className="btn-start-lab"
+          className={
+  resumeSessionId
+    ? "btn-resume-lab"
+    : "btn-start-lab"
+}
           onClick={handleStartLab}
           disabled={startingLab}
         >
@@ -233,9 +278,9 @@ const [pendingChallengeId, setPendingChallengeId] =
             </>
           ) : (
             <>
-              <PlayCircle size={18} />
-              Start Lab
-            </>
+  <PlayCircle size={18} />
+  {resumeSessionId ? "Resume Lab" : "Start Lab"}
+</>
           )}
         </button>
       </div>

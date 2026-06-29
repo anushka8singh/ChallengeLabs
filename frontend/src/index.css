@@ -1124,29 +1124,35 @@ input, textarea { font: inherit; }
   height: var(--topbar-h);
   background: var(--surface-1);
   border-bottom: 1px solid var(--border);
+
   display: flex;
   align-items: center;
   justify-content: space-between;
+
   padding: 0 24px;
   flex-shrink: 0;
   gap: 16px;
 }
 
-.lab-back-btn {
-  flex-shrink: 0;
-  min-width: 70px;
-}
 
 .lab-header-title {
   flex: 1;
   text-align: center;
+
   font-size: 15px;
   font-weight: 600;
   color: var(--text-primary);
+
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+
   padding: 0 8px;
+}
+
+.lab-back-btn {
+  align-self: center;
+  margin-top: 2px;
 }
 
 /* ── Body ── */
@@ -1762,4 +1768,160 @@ input, textarea { font: inherit; }
     line-height:1.7;
 
     margin-bottom:24px;
+}
+
+
+.lab-overlay{
+
+position:fixed;
+inset:0;
+
+background:rgba(0,0,0,.72);
+
+display:flex;
+align-items:center;
+justify-content:center;
+
+z-index:9999;
+
+backdrop-filter:blur(5px);
+
+}
+
+.lab-overlay-card{
+
+width:420px;
+
+background:#18181b;
+
+border:1px solid #2f2f36;
+
+border-radius:18px;
+
+padding:42px;
+
+text-align:center;
+
+box-shadow:0 30px 80px rgba(0,0,0,.45);
+
+}
+
+.lab-overlay-card h2{
+
+margin-top:22px;
+margin-bottom:12px;
+
+font-size:24px;
+font-weight:700;
+
+color:white;
+
+}
+
+.lab-overlay-card p{
+
+color:#a1a1aa;
+
+line-height:1.7;
+
+}
+
+.lab-overlay-spinner{
+
+margin:auto;
+
+color:#7c3aed;
+
+animation:spin 1s linear infinite;
+
+}
+
+@keyframes spin{
+
+from{
+transform:rotate(0deg);
+}
+
+to{
+transform:rotate(360deg);
+}
+
+}
+
+.btn-resume-lab{
+
+display:flex;
+align-items:center;
+justify-content:center;
+gap:10px;
+
+width:100%;
+
+padding:14px 20px;
+
+border:none;
+border-radius:12px;
+
+background:#16a34a;
+
+color:white;
+
+font-weight:600;
+
+cursor:pointer;
+
+transition:.2s;
+
+}
+
+.btn-resume-lab:hover{
+
+background:#15803d;
+
+transform:translateY(-1px);
+
+}
+
+.btn-resume-lab:disabled{
+
+opacity:.7;
+
+cursor:not-allowed;
+
+}
+
+.btn-stop-session {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  padding: 4px 16px;      /* reduced vertical padding */
+   margin-left:12px;
+  min-height: 44px;        /* optional */
+
+  border: none;
+  border-radius: 10px;
+
+  background: #860b0b;
+  color: white;
+
+  font-size: 15px;
+  font-weight: 600;
+
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-stop-session:hover {
+  background: #b91c1c;
+  transform: translateY(-1px);
+}
+
+.btn-stop-session:disabled{
+
+opacity:.7;
+
+cursor:not-allowed;
+
 }

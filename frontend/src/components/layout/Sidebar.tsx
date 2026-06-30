@@ -27,7 +27,14 @@ const navItems = [
   },
 ];
 
-const Sidebar = () => {
+interface SidebarProps{
+    open:boolean;
+    closeSidebar:()=>void;
+}
+
+const Sidebar = ({
+    open,
+}:SidebarProps)=>{
   const { user, logout } = useAuth();
   const isAdmin = user?.role === 'ADMIN';
   const navigate = useNavigate();
@@ -38,7 +45,13 @@ const Sidebar = () => {
   };
 
   return (
-    <aside className="sidebar">
+   <aside
+    className={`sidebar ${
+        open
+            ? ""
+            : "sidebar--hidden"
+    }`}
+>
       {/* Logo */}
       <div className="sidebar-logo">
         <div className="sidebar-logo-icon">

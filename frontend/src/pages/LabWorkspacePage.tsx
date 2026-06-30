@@ -1,3 +1,8 @@
+import {
+  Panel,
+  PanelGroup,
+  PanelResizeHandle,
+} from "react-resizable-panels";
 import XTermTerminal from '../components/lab/XTermTerminal';
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
@@ -84,8 +89,21 @@ const [timeRemaining, setTimeRemaining] = useState('');
 const [showHint, setShowHint] = useState(false);
   const hasExpiredRef = useRef(false);
 const [showStopModal, setShowStopModal] = useState(false);
-  // Auto-scroll terminal output
+const [terminalExpanded, setTerminalExpanded] =
+  useState(false);
  
+
+const [isDragging, setIsDragging] =
+  useState(false);
+  // Auto-scroll terminal output
+ const [leftPanelWidth, setLeftPanelWidth] =
+  useState(() => {
+    return Number(
+      localStorage.getItem(
+        "lab-panel-width"
+      ) ?? 44
+    );
+  });
 
   // Fetch initial progress
   useEffect(() => {
@@ -231,8 +249,45 @@ const [showStopModal, setShowStopModal] = useState(false);
   }
 };
 
+useEffect(() => {
+  if (!isDragging) return;
+
+  document.body.classList.add("dragging");
+
+  const handleMove = (e: MouseEvent) => {
+    e.preventDefault();
+
+    const percent = (e.clientX / window.innerWidth) * 100;
+
+    if (percent >= 25 && percent <= 70) {
+      setLeftPanelWidth(percent);
+    }
+  };
+
+  const stopDragging = () => {
+    document.body.classList.remove("dragging");
+    setIsDragging(false);
+  };
+
+  window.addEventListener("mousemove", handleMove);
+  window.addEventListener("mouseup", stopDragging);
+
+  return () => {
+    document.body.classList.remove("dragging");
+    window.removeEventListener("mousemove", handleMove);
+    window.removeEventListener("mouseup", stopDragging);
+    document.body.classList.add("dragging");
+    document.body.classList.remove("dragging");
+  };
+}, [isDragging]);
 
 
+useEffect(() => {
+  localStorage.setItem(
+    "lab-panel-width",
+    leftPanelWidth.toString()
+  );
+}, [leftPanelWidth]);
   // Command submit handler
   
 
@@ -319,10 +374,24 @@ const [showStopModal, setShowStopModal] = useState(false);
     <div className="lab-page">
       {header}
 
-      <div className="lab-body">
-        
-        {/* Left Panel: Instructions, Progress, Tasks */}
-        <div className="lab-left-panel">
+     <div
+  className={`lab-body ${
+    terminalExpanded
+      ? "lab-body--expanded"
+      : ""
+  }`}
+  style={
+    !terminalExpanded
+      ? {
+          gridTemplateColumns: `${leftPanelWidth}% 6px auto`,
+        }
+      : undefined
+  }
+>
+
+  {!terminalExpanded && (
+
+    <div className="lab-left-panel">
           {/* ── Info Cards ─────────────────────────────────────────────────── */}
           <div className="lab-info-grid">
             
@@ -485,9 +554,25 @@ const [showStopModal, setShowStopModal] = useState(false);
   </div>
 )}
         </div>
-
+  )}
         {/* Right Panel: Terminal */}
-        <div className="lab-right-panel">
+        
+
+<div
+  className="lab-divider"
+  onMouseDown={() =>
+    setIsDragging(true)
+  }
+/>
+
+{/* Right Panel */}
+        <div
+  className={`lab-right-panel ${
+    terminalExpanded
+      ? "lab-right-panel--expanded"
+      : ""
+  }`}
+>
           <div className="terminal-panel">
             <div className="terminal-header">
               <div className="terminal-title-group">
@@ -495,16 +580,31 @@ const [showStopModal, setShowStopModal] = useState(false);
                 <span>Interactive Terminal</span>
               </div>
               <div className="terminal-actions">
-                <button
-  className="terminal-action-btn"
-  onClick={() => {
-    terminalWriteRef.current('\x1Bc');
-  }}
->
-                  <Trash2 size={14} />
-                  <span>Clear</span>
-                </button>
-              </div>
+
+  <button
+    className="terminal-action-btn"
+    onClick={() =>
+      setTerminalExpanded(
+        !terminalExpanded
+      )
+    }
+  >
+    {terminalExpanded
+      ? "🗗 Restore"
+      : "⛶ Expand"}
+  </button>
+
+  <button
+    className="terminal-action-btn"
+    onClick={() => {
+      terminalWriteRef.current("\x1Bc");
+    }}
+  >
+    <Trash2 size={14} />
+    <span>Clear</span>
+  </button>
+
+</div>
             </div>
 
             <div className="terminal-body">

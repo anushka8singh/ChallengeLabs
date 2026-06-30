@@ -13,8 +13,7 @@ const DashboardPage = () => {
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [loading, setLoading] = useState(true);
   const [completedCount, setCompletedCount] = useState<number | string>('—');
-  const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
-
+ 
   useEffect(() => {
     getChallenges()
       .then((res) => res.success && setChallenges(res.data))
@@ -25,7 +24,7 @@ const DashboardPage = () => {
       .then((res) => {
         if (res.success) {
           setCompletedCount(res.data.stats.completed);
-          setCompletedIds(new Set(res.data.completedChallenges.map((c) => c.challengeId)));
+         
         }
       })
       .catch(() => {});
@@ -117,14 +116,9 @@ const DashboardPage = () => {
                 onKeyDown={(e) => e.key === 'Enter' && navigate(`/challenges/${c.slug}`)}
               >
                 <div className="recent-card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                    <DifficultyBadge difficulty={c.difficulty} />
-                    {completedIds.has(c.id) && (
-                      <span className="badge badge--completed" style={{ fontSize: '11px', padding: '2px 8px' }}>
-                        ✓ Completed
-                      </span>
-                    )}
-                  </div>
+                  <div>
+    <DifficultyBadge difficulty={c.difficulty} />
+</div>
                   <span className="recent-card-time">
                     <Clock size={12} /> {c.estimatedMinutes}m
                   </span>

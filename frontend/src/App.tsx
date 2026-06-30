@@ -16,6 +16,7 @@ import AdminCreateTaskPage from './pages/AdminCreateTaskPage';
 import AdminEditChallengePage from './pages/AdminEditChallengePage';
 import AdminEditTaskPage from './pages/AdminEditTaskPage';
 import CompletedChallengesPage from './pages/CompletedChallengesPage';
+import LandingPage from './pages/LandingPage';
 function App() {
   return (
     <BrowserRouter>
@@ -38,6 +39,7 @@ function App() {
 
         <Routes>
           {/* Public routes */}
+          <Route path="/"        element={<LandingPage />} />
           <Route path="/login"    element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
 
@@ -73,7 +75,7 @@ function App() {
           </Route>
 
           {/* Default redirect */}
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>

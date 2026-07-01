@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AlertCircle, Trophy } from 'lucide-react';
+import { AlertCircle, Trophy, Star } from 'lucide-react';
 
 import {
   getCompletedChallenges,
@@ -14,7 +14,6 @@ import toast from "react-hot-toast";
 import ConfirmationModal from "../components/common/ConfirmationModal";
 
 import {
-  checkSessionConflict,
   stopSession,
 } from "../services/sessionService";
 
@@ -27,13 +26,13 @@ const CompletedChallengesPage = () => {
   const [completedChallenges, setCompletedChallenges] =
     useState<CompletedChallenge[]>([]);
 
-    const [selectedChallenge, setSelectedChallenge] =
-  useState<CompletedChallenge | null>(null);
+  const [selectedChallenge, setSelectedChallenge] =
+    useState<CompletedChallenge | null>(null);
 
-const [showModal, setShowModal] = useState(false);
+  const [showModal, setShowModal] = useState(false);
 
-const [retryLoading, setRetryLoading] =
-  useState(false);
+  const [retryLoading, setRetryLoading] =
+    useState(false);
 
   const [completedCount, setCompletedCount] =
     useState(0);
@@ -60,80 +59,78 @@ const [retryLoading, setRetryLoading] =
   }, []);
 
   const handleRetry = async (
-  challenge: CompletedChallenge
-) => {
-  setSelectedChallenge(challenge);
-  setShowModal(true);
-};
+    challenge: CompletedChallenge
+  ) => {
+    setSelectedChallenge(challenge);
+    setShowModal(true);
+  };
 
-const handleConfirmRetry = async () => {
+  const handleConfirmRetry = async () => {
 
-  if (!selectedChallenge) return;
+    if (!selectedChallenge) return;
 
- try {
-  setRetryLoading(true);
+    try {
+      setRetryLoading(true);
 
-  // Try stopping an existing session.
-  // Ignore "No active session found".
-  try {
-    await stopSession();
-  } catch (err: any) {
-    if (err?.response?.status !== 404) {
-      throw err;
+      // Try stopping an existing session.
+      // Ignore "No active session found".
+      try {
+        await stopSession();
+      } catch (err: any) {
+        if (err?.response?.status !== 404) {
+          throw err;
+        }
+      }
+
+      const res = await startSession(
+        selectedChallenge.challengeId
+      );
+
+      toast.success("Challenge started.");
+
+      navigate(`/lab/${res.data.session.id}`, {
+        state: {
+          expiresAt: res.data.expiresAt,
+          status: res.data.session.status,
+        },
+      });
+
+    } catch (err: any) {
+
+      toast.error(
+        err?.response?.data?.message ??
+        "Unable to start challenge."
+      );
+
+    } finally {
+
+      setRetryLoading(false);
+      setShowModal(false);
+      setSelectedChallenge(null);
+
     }
-  }
-
-  const res = await startSession(
-    selectedChallenge.challengeId
-  );
-
-  toast.success("Challenge started.");
-
-  navigate(`/lab/${res.data.session.id}`, {
-    state: {
-      expiresAt: res.data.expiresAt,
-      status: res.data.session.status,
-    },
-  });
-
-} catch (err: any) {
-
-  toast.error(
-    err?.response?.data?.message ??
-    "Unable to start challenge."
-  );
-
-} finally {
-
-  setRetryLoading(false);
-  setShowModal(false);
-  setSelectedChallenge(null);
-
-}
-};
+  };
 
   return (
     <div className="challenges-page">
-      <div
-        style={{
-          marginBottom: 28,
-        }}
-      >
-        <h2 className="dashboard-welcome-title">
-          Completed Challenges
-        </h2>
 
-        <p className="dashboard-welcome-sub">
-          You have completed{' '}
-          <strong>
-            {completedCount}
-          </strong>{' '}
-          challenge
-          {completedCount !== 1
-            ? 's'
-            : ''}
-          .
-        </p>
+      {/* Page header */}
+      <div className="dashboard-welcome" style={{ padding: '28px 36px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <div className="stat-icon stat-icon--purple" style={{ flexShrink: 0 }}>
+            <Trophy size={18} />
+          </div>
+          <div>
+            <h2 className="dashboard-welcome-title" style={{ fontSize: '24px' }}>
+              Completed Challenges
+            </h2>
+            <p className="dashboard-welcome-sub" style={{ marginTop: 0 }}>
+              {loading
+                ? 'Loading…'
+                : `You've completed ${completedCount} challenge${completedCount !== 1 ? 's' : ''}`}
+            </p>
+          </div>
+        </div>
       </div>
 
       {loading && (
@@ -156,31 +153,31 @@ const handleConfirmRetry = async () => {
 
       {!loading &&
         !error &&
-        completedChallenges.length ===
-          0 && (
+        completedChallenges.length === 0 && (
           <div className="empty-state">
-            <Trophy
-              size={42}
-              style={{
-                marginBottom: 12,
-              }}
-            />
-
+            <div className="empty-state-icon-wrap">
+              <Star size={28} />
+            </div>
             <p className="empty-state-title">
               No completed challenges yet
             </p>
-
             <p className="empty-state-sub">
-              Finish your first lab to
-              unlock it here.
+              Finish your first lab to unlock it here. Your achievements will be tracked automatically.
             </p>
+            <button
+              className="dashboard-quick-action dashboard-quick-action--primary"
+              style={{ marginTop: '16px' }}
+              onClick={() => navigate('/challenges')}
+            >
+              <Trophy size={15} />
+              Start a Challenge
+            </button>
           </div>
         )}
 
       {!loading &&
         !error &&
-        completedChallenges.length >
-          0 && (
+        completedChallenges.length > 0 && (
           <div className="challenges-grid">
             {completedChallenges.map(
               (challenge) => (
@@ -197,19 +194,20 @@ const handleConfirmRetry = async () => {
             )}
           </div>
         )}
-       <ConfirmationModal
-  isOpen={showModal}
-  title="Active Lab Session"
-  description="You can only run one challenge at a time. Starting this challenge will automatically stop your current lab session."
-  confirmText="Stop & Retry Challenge"
-  cancelText="Cancel"
-  loading={retryLoading}
-  onCancel={() => {
-    setShowModal(false);
-    setSelectedChallenge(null);
-  }}
-  onConfirm={handleConfirmRetry}
-/>
+
+      <ConfirmationModal
+        isOpen={showModal}
+        title="Active Lab Session"
+        description="You can only run one challenge at a time. Starting this challenge will automatically stop your current lab session."
+        confirmText="Stop & Retry Challenge"
+        cancelText="Cancel"
+        loading={retryLoading}
+        onCancel={() => {
+          setShowModal(false);
+          setSelectedChallenge(null);
+        }}
+        onConfirm={handleConfirmRetry}
+      />
     </div>
   );
 };

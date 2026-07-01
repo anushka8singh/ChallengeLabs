@@ -1,5 +1,4 @@
-import { Clock, RotateCcw } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Clock, RotateCcw, Calendar, CheckCircle, RefreshCw } from 'lucide-react';
 import DifficultyBadge from './DifficultyBadge';
 
 export interface CompletedChallenge {
@@ -21,7 +20,12 @@ const CompletedChallengeCard = ({
   challenge,
   onRetry,
 }: Props) => {
-  const navigate = useNavigate();
+
+  const completedDate = new Date(challenge.completedAt).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
 
   return (
     <div className="challenge-card">
@@ -38,37 +42,34 @@ const CompletedChallengeCard = ({
         {challenge.title}
       </h3>
 
-      <div
-        style={{
-          marginTop: 12,
-          marginBottom: 18,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 8,
-          color: 'var(--text-secondary)',
-          fontSize: '14px',
-        }}
-      >
-        <span>
-          <strong>Completed:</strong>{' '}
-          {new Date(challenge.completedAt).toLocaleDateString()}
-        </span>
-
-        <span>
-          <strong>Attempts:</strong> {challenge.attempts}
+      {/* Success indicator */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+        <span className="completed-success-indicator">
+          <CheckCircle size={11} />
+          Completed
         </span>
       </div>
 
-      <div className="completed-actions">
-        
+      {/* Meta info */}
+      <div className="completed-card-meta">
+        <div className="completed-card-meta-row">
+          <Calendar size={13} className="completed-card-meta-icon" />
+          <span>{completedDate}</span>
+        </div>
+        <div className="completed-card-meta-row">
+          <RefreshCw size={13} className="completed-card-meta-icon" />
+          <span>{challenge.attempts} attempt{challenge.attempts !== 1 ? 's' : ''}</span>
+        </div>
+      </div>
 
+      <div className="completed-actions">
         <button
-    className="btn-primary completed-retry-btn"
-    onClick={() => onRetry(challenge)}
->
-    <RotateCcw size={15} />
-    Retry Challenge
-</button>
+          className="btn-primary completed-retry-btn"
+          onClick={() => onRetry(challenge)}
+        >
+          <RotateCcw size={15} />
+          Retry Challenge
+        </button>
       </div>
     </div>
   );

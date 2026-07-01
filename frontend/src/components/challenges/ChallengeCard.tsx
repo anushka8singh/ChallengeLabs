@@ -1,4 +1,4 @@
-import { Clock } from 'lucide-react';
+import { Clock, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Challenge } from '../../services/challengeService';
 import DifficultyBadge from './DifficultyBadge';
@@ -27,7 +27,9 @@ const ChallengeCard = ({ challenge }: ChallengeCardProps) => {
       </div>
       <h3 className="challenge-card-title">{challenge.title}</h3>
       <div className="challenge-card-footer">
-        <span className="challenge-card-arrow">View challenge →</span>
+        <span className="challenge-card-arrow">
+          View challenge <ArrowRight size={13} />
+        </span>
       </div>
     </div>
   );

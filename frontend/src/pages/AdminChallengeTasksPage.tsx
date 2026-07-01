@@ -69,12 +69,16 @@ const loadTasks = async () => {
 
   if (loading) {
     return (
-      <div className="error-state">
-        <div className="btn-spinner" style={{ width: '24px', height: '24px' }} />
-        <p style={{ marginTop: '12px' }}>Loading tasks...</p>
+      <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="skeleton-card" style={{ height: '80px' }} />
+          ))}
+        </div>
       </div>
     );
   }
+
 
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto' }}>

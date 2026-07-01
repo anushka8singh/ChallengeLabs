@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Search, SlidersHorizontal, AlertCircle } from 'lucide-react';
+import { Search, SlidersHorizontal, AlertCircle, BookOpen, Layers } from 'lucide-react';
 import { getChallenges } from '../services/challengeService';
 import type { Challenge } from '../services/challengeService';
 import ChallengeCard from '../components/challenges/ChallengeCard';
@@ -39,6 +39,24 @@ const ChallengePage = () => {
 
   return (
     <div className="challenges-page">
+
+      {/* Page header */}
+      <div className="dashboard-welcome" style={{ padding: '28px 36px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <div className="stat-icon stat-icon--purple" style={{ flexShrink: 0 }}>
+            <Layers size={18} />
+          </div>
+          <div>
+            <h2 className="dashboard-welcome-title" style={{ fontSize: '24px' }}>
+              Challenges
+            </h2>
+            <p className="dashboard-welcome-sub" style={{ marginTop: 0 }}>
+              {loading ? 'Loading…' : `${challenges.length} hands-on lab${challenges.length !== 1 ? 's' : ''} available`}
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Filters Bar */}
       <div className="challenges-toolbar">
         <div className="search-wrapper">
@@ -94,14 +112,18 @@ const ChallengePage = () => {
         </div>
       )}
 
-      {/* Grid */}
+      {/* Empty state */}
       {!loading && !error && filtered.length === 0 && (
         <div className="empty-state">
+          <div className="empty-state-icon-wrap">
+            <BookOpen size={28} />
+          </div>
           <p className="empty-state-title">No challenges found</p>
           <p className="empty-state-sub">Try adjusting your search or filters.</p>
         </div>
       )}
 
+      {/* Grid */}
       {!loading && !error && filtered.length > 0 && (
         <div className="challenges-grid">
           {filtered.map((c) => (

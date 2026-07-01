@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, Clock, TrendingUp, ArrowRight } from 'lucide-react';
+import { BookOpen, Clock, TrendingUp, ArrowRight, Zap, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { getChallenges } from '../services/challengeService';
 import type { Challenge } from '../services/challengeService';
@@ -13,7 +13,7 @@ const DashboardPage = () => {
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [loading, setLoading] = useState(true);
   const [completedCount, setCompletedCount] = useState<number | string>('—');
- 
+
   useEffect(() => {
     getChallenges()
       .then((res) => res.success && setChallenges(res.data))
@@ -24,7 +24,6 @@ const DashboardPage = () => {
       .then((res) => {
         if (res.success) {
           setCompletedCount(res.data.stats.completed);
-         
         }
       })
       .catch(() => {});
@@ -32,7 +31,7 @@ const DashboardPage = () => {
 
   const stats = [
     {
-      label: 'Completed Challenges',
+      label: 'Completed',
       value: loading ? '—' : completedCount,
       icon: BookOpen,
       color: 'stat-icon--purple',
@@ -58,17 +57,36 @@ const DashboardPage = () => {
   ];
 
   const recent = challenges.slice(0, 4);
+  const firstName = user?.name?.split(' ')[0] ?? 'there';
 
   return (
     <div className="dashboard-page">
-      {/* Welcome */}
+
+      {/* Welcome section */}
       <div className="dashboard-welcome">
         <h2 className="dashboard-welcome-title">
-          Welcome back, <span className="text-accent">{user?.name?.split(' ')[0] ?? 'there'}</span> 👋
+          Welcome back, <span className="text-accent">{firstName}</span> 👋
         </h2>
         <p className="dashboard-welcome-sub">
           Pick up where you left off or explore new challenges.
         </p>
+
+        <div className="dashboard-quick-actions">
+          <button
+            className="dashboard-quick-action dashboard-quick-action--primary"
+            onClick={() => navigate('/challenges')}
+          >
+            <Zap size={15} />
+            Browse Challenges
+          </button>
+          <button
+            className="dashboard-quick-action dashboard-quick-action--secondary"
+            onClick={() => navigate('/completed')}
+          >
+            <CheckCircle2 size={15} />
+            View Completed
+          </button>
+        </div>
       </div>
 
       {/* Stats */}
@@ -117,8 +135,8 @@ const DashboardPage = () => {
               >
                 <div className="recent-card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
                   <div>
-    <DifficultyBadge difficulty={c.difficulty} />
-</div>
+                    <DifficultyBadge difficulty={c.difficulty} />
+                  </div>
                   <span className="recent-card-time">
                     <Clock size={12} /> {c.estimatedMinutes}m
                   </span>
@@ -134,6 +152,3 @@ const DashboardPage = () => {
 };
 
 export default DashboardPage;
-
-
-

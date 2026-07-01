@@ -27,6 +27,19 @@ export const createChallengeSchema = z.object({
 
 export const updateChallengeSchema = createChallengeSchema.partial();
 
+const validationTypeSchema = z.enum([
+  "COMMAND",
+  "DIRECTORY_EXISTS",
+  "FILE_EXISTS",
+  "FILE_CONTAINS",
+  "COMMAND_OUTPUT",
+  "REGEX",
+  "PERMISSION",
+  "USER_EXISTS",
+  "PROCESS_RUNNING",
+  "CUSTOM_SCRIPT",
+]);
+
 export const createTaskSchema = z.object({
   title: z.string()
     .min(3, "Title must be at least 3 characters")
@@ -36,9 +49,16 @@ export const createTaskSchema = z.object({
   order: z.number()
     .int("Order must be an integer")
     .min(1, "Order must be at least 1"),
-  hint: z.string().optional(),
-  validationRule: z.string().optional(),
-  expectedOutcome: z.string().optional(),
+ hint: z.string().optional(),
+
+validationRule: z.string().optional(),
+expectedOutcome: z.string().optional(),
+
+validationType: validationTypeSchema
+  .optional()
+  .default("COMMAND"),
+
+validationConfig: z.any().optional(),
 });
 
 export const updateTaskSchema = createTaskSchema.partial();

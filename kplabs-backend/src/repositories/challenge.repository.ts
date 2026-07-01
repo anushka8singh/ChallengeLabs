@@ -156,6 +156,17 @@ export class ChallengeRepository {
       where: { id: taskId },
     });
   }
+
+  async findTaskValidations(taskId: string) {
+  return prisma.taskValidation.findMany({
+    where: {
+      taskId,
+    },
+    orderBy: {
+      order: "asc",
+    },
+  });
+}
 }
 
 export const challengeRepository = new ChallengeRepository();

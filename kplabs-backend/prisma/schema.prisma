@@ -51,7 +51,18 @@ enum EventType {
   VALIDATION_FAILED
   TASK_COMPLETED
 }
-
+enum ValidationType {
+  COMMAND
+  DIRECTORY_EXISTS
+  FILE_EXISTS
+  FILE_CONTAINS
+  COMMAND_OUTPUT
+  REGEX
+  PERMISSION
+  USER_EXISTS
+  PROCESS_RUNNING
+  CUSTOM_SCRIPT
+}
 // ===========================================
 // MODELS
 // ===========================================
@@ -130,7 +141,7 @@ model ChallengeTask {
   hint        String? @db.Text
   validationRule   String?  @db.Text  // e.g., "test -f hello.txt"
   expectedOutcome  String?  @db.Text  // Description of expected result
-
+  
   createdAt DateTime @default(now())
 
   // ===========================================
@@ -141,10 +152,36 @@ model ChallengeTask {
 
   /// One task can have multiple validation results across different sessions
   validationResults ValidationResult[]
-
+  validations TaskValidation[]
   @@index([challengeId])
   @@index([order])
   @@map("challenge_tasks")
+}
+
+model TaskValidation {
+
+  id String @id @default(cuid())
+
+  taskId String
+
+  type ValidationType
+
+  description String?
+
+  config Json?
+
+  order Int @default(1)
+
+  isRequired Boolean @default(true)
+
+  createdAt DateTime @default(now())
+
+  task ChallengeTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+  @@index([type])
+
+  @@map("task_validations")
 }
 
 /// Session model

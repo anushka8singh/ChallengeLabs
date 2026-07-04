@@ -22,7 +22,7 @@ export class CommandValidationStrategy
     try {
 
       const result =
-        await this.execute(
+        await this.executeCommand(
           containerId,
           config.command
         );

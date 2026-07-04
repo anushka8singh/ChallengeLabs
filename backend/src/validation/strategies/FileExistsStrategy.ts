@@ -1,23 +1,21 @@
 import { BaseValidationStrategy } from "./BaseValidationStrategy";
-
 import { IValidationStrategy } from "../interfaces/IValidationStrategy";
 
 import {
-  DirectoryExistsValidationConfig,
+  FileExistsValidationConfig,
 } from "../types/ValidationConfig";
 
 import { ValidationType } from "../types/ValidationType";
 
 import { LinuxCommandBuilder } from "../builders/LinuxCommandBuilder";
 
-export class DirectoryExistsStrategy
+export class FileExistsStrategy
   extends BaseValidationStrategy
-  implements
-    IValidationStrategy<DirectoryExistsValidationConfig>
+  implements IValidationStrategy<FileExistsValidationConfig>
 {
   async validate(
     containerId: string,
-    config: DirectoryExistsValidationConfig
+    config: FileExistsValidationConfig
   ) {
 
     const start = Date.now();
@@ -26,21 +24,21 @@ export class DirectoryExistsStrategy
 
       const missing: string[] = [];
 
-      for (const dir of config.directories) {
+      for (const file of config.files) {
 
         const command =
-          LinuxCommandBuilder.directoryExists(
-            dir
+          LinuxCommandBuilder.fileExists(
+            file
           );
 
         const result =
-          await this.execute(
+          await this.executeCommand(
             containerId,
             command
           );
 
         if (result.exitCode !== 0) {
-          missing.push(dir);
+          missing.push(file);
         }
 
       }
@@ -51,8 +49,8 @@ export class DirectoryExistsStrategy
       if (missing.length === 0) {
 
         return this.success(
-          ValidationType.DIRECTORY_EXISTS,
-          "All required directories exist.",
+          ValidationType.FILE_EXISTS,
+          "All required files exist.",
           undefined,
           0,
           duration
@@ -61,8 +59,8 @@ export class DirectoryExistsStrategy
       }
 
       return this.failure(
-        ValidationType.DIRECTORY_EXISTS,
-        `Missing directories: ${missing.join(", ")}`,
+        ValidationType.FILE_EXISTS,
+        `Missing files: ${missing.join(", ")}`,
         undefined,
         1,
         duration
@@ -71,7 +69,7 @@ export class DirectoryExistsStrategy
     } catch (error) {
 
       return this.executionError(
-        ValidationType.DIRECTORY_EXISTS,
+        ValidationType.FILE_EXISTS,
         error
       );
 

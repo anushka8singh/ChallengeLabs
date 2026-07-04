@@ -1,11 +1,13 @@
 import { dockerService } from "../../services/docker.service";
+
+import { FeedbackBuilder } from "../builders/FeedbackBuilder";
+
 import { ValidationResult } from "../types/ValidationResult";
 import { ValidationType } from "../types/ValidationType";
-import { FeedbackBuilder } from "../builders/FeedbackBuilder";
 
 export abstract class BaseValidationStrategy {
 
-  protected async execute(
+  protected async executeCommand(
     containerId: string,
     command: string
   ) {

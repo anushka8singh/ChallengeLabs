@@ -32,6 +32,7 @@ export const getAdminChallenges =
   description: string;
   difficulty: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
   dockerImage: string;
+  setupScript?: string;
   estimatedMinutes: number;
   isPublished: boolean;
 }

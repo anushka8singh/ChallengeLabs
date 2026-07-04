@@ -104,6 +104,7 @@ model Challenge {
   description      String     @db.Text
   difficulty       Difficulty // BEGINNER | INTERMEDIATE | ADVANCED
   dockerImage      String     // e.g., "kplabs/linux-basics:latest"
+  setupScript      String? @db.Text
   estimatedMinutes Int        // Estimated time to complete
   isPublished      Boolean    @default(false)
   deletedAt        DateTime?  // Soft delete support

@@ -7,6 +7,8 @@
 import { prisma } from '../config/prisma';
 import { Challenge, ChallengeTask, Difficulty } from '@prisma/client';
 import { CreateChallengeInput, CreateTaskInput, UpdateChallengeInput, UpdateTaskInput } from '../validators/challenge.validator';
+import { ValidationTask } from "../validation/types/ValidationTask";
+import { ValidationType } from "../validation/types/ValidationType";
 
 type PublishedChallengeSummary = Pick<
   Challenge,
@@ -137,6 +139,51 @@ export class ChallengeRepository {
       },
     });
   }
+async createTaskValidation(
+  taskId: string,
+  validationRule: string,
+  expectedOutcome?: string
+) {
+  return prisma.taskValidation.create({
+    data: {
+      taskId,
+      type: "COMMAND",
+      config: {
+        command: validationRule,
+        expectedOutput: expectedOutcome ?? "",
+      },
+      order: 1,
+      isRequired: true,
+    },
+  });
+}
+
+async findCommandValidation(taskId: string) {
+  return prisma.taskValidation.findFirst({
+    where: {
+      taskId,
+      type: "COMMAND",
+    },
+  });
+}
+
+async updateTaskValidation(
+  validationId: string,
+  validationRule: string,
+  expectedOutcome?: string
+) {
+  return prisma.taskValidation.update({
+    where: {
+      id: validationId,
+    },
+    data: {
+      config: {
+        command: validationRule,
+        expectedOutput: expectedOutcome ?? "",
+      },
+    },
+  });
+}
 
   async updateTask(taskId: string, data: UpdateTaskInput): Promise<ChallengeTask> {
     return prisma.challengeTask.update({
@@ -156,17 +203,29 @@ export class ChallengeRepository {
       where: { id: taskId },
     });
   }
+async findTaskValidations(
+  taskId: string
+): Promise<ValidationTask[]> {
 
-  async findTaskValidations(taskId: string) {
-  return prisma.taskValidation.findMany({
-    where: {
-      taskId,
-    },
-    orderBy: {
-      order: "asc",
-    },
-  });
+  const validations =
+    await prisma.taskValidation.findMany({
+      where: {
+        taskId,
+      },
+      orderBy: {
+        order: "asc",
+      },
+    });
+
+  return validations.map((validation) => ({
+    type: validation.type as unknown as ValidationType,
+    config: validation.config,
+    required: validation.isRequired,
+    order: validation.order,
+    description: validation.description ?? undefined,
+  }));
 }
+
 }
 
 export const challengeRepository = new ChallengeRepository();

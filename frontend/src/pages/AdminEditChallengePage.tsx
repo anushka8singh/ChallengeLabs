@@ -26,6 +26,7 @@ const AdminEditChallengePage = () => {
       description: '',
       difficulty: 'BEGINNER',
       dockerImage: '',
+      setupScript: '',
       estimatedMinutes: 30,
       isPublished: false,
     });
@@ -46,6 +47,7 @@ const AdminEditChallengePage = () => {
         description: challenge.description,
         difficulty: challenge.difficulty,
         dockerImage: challenge.dockerImage,
+        setupScript: challenge.setupScript ?? '',
         estimatedMinutes: challenge.estimatedMinutes,
         isPublished: challenge.isPublished,
       });
@@ -194,6 +196,33 @@ const AdminEditChallengePage = () => {
               required
             />
           </div>
+
+<div className="form-group">
+  <label className="form-label">
+    Setup Script (Optional)
+  </label>
+
+  <textarea
+    className="form-input"
+    style={{
+      minHeight: '180px',
+      resize: 'vertical',
+      fontFamily: 'monospace',
+    }}
+    placeholder={`# Commands executed automatically when the challenge starts
+
+mkdir -p /workspace
+
+touch /workspace/example.txt`}
+    value={form.setupScript ?? ''}
+    onChange={(e) =>
+      setForm({
+        ...form,
+        setupScript: e.target.value,
+      })
+    }
+  />
+</div>
 
           <div className="form-group">
             <label className="form-label">Estimated Minutes</label>

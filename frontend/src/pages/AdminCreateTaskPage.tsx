@@ -13,6 +13,12 @@ const AdminCreateTaskPage = () => {
 
   const [loading, setLoading] =
     useState(false);
+const [validationType, setValidationType] = useState("COMMAND");
+
+const [directoryPath, setDirectoryPath] = useState("");
+const [filePath, setFilePath] = useState("");
+const [fileContent, setFileContent] = useState("");
+const [permission, setPermission] = useState("");
 
   const [form, setForm] = useState({
     title: '',
@@ -33,10 +39,54 @@ const AdminCreateTaskPage = () => {
     try {
       setLoading(true);
 
-      await createTask(
-        challengeId,
-        form
-      );
+     const payload = {
+  ...form,
+};
+
+switch (validationType) {
+
+  case "DIRECTORY_EXISTS":
+
+    payload.validationRule =
+      `test -d "${directoryPath}"`;
+
+    payload.expectedOutcome = "";
+
+    break;
+
+  case "FILE_EXISTS":
+
+    payload.validationRule =
+      `test -f "${filePath}"`;
+
+    payload.expectedOutcome = "";
+
+    break;
+
+  case "FILE_CONTAINS":
+
+    payload.validationRule =
+      `grep -q '${fileContent}' "${filePath}"`;
+
+    payload.expectedOutcome = "";
+
+    break;
+
+  case "PERMISSION":
+
+    payload.validationRule =
+      `[ "$(stat -c '%a' "${filePath}")" = "${permission}" ]`;
+
+    payload.expectedOutcome = "";
+
+    break;
+
+}
+
+await createTask(
+  challengeId,
+  payload
+);
 
       toast.success(
         'Task created successfully'
@@ -137,38 +187,192 @@ const AdminCreateTaskPage = () => {
               }
             />
           </div>
+          
+ <div className="form-group">
+  <label className="form-label">
+    Validation Type
+  </label>
 
-          <div className="form-group">
-            <label className="form-label">Validation Rule (Command or Script)</label>
-            <input
-              type="text"
-              className="form-input"
-              placeholder="e.g. systemctl is-active apache2"
-              value={form.validationRule}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  validationRule: e.target.value,
-                })
-              }
-            />
-          </div>
+  <select
+    className="form-input"
+    value={validationType}
+    onChange={(e) =>
+      setValidationType(e.target.value)
+    }
+  >
+    <option value="COMMAND">
+      Command
+    </option>
 
-          <div className="form-group">
-            <label className="form-label">Expected Outcome (Output pattern to match)</label>
-            <input
-              type="text"
-              className="form-input"
-              placeholder="e.g. active"
-              value={form.expectedOutcome}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  expectedOutcome: e.target.value,
-                })
-              }
-            />
-          </div>
+    <option value="DIRECTORY_EXISTS">
+      Directory Exists
+    </option>
+
+    <option value="FILE_EXISTS">
+      File Exists
+    </option>
+
+    <option value="FILE_CONTAINS">
+      File Contains
+    </option>
+
+    <option value="PERMISSION">
+      Permission
+    </option>
+  </select>
+</div>
+         
+          {validationType === "COMMAND" && (
+  <>
+    <div className="form-group">
+      <label className="form-label">
+        Validation Rule
+      </label>
+
+      <input
+        type="text"
+        className="form-input"
+        placeholder="e.g. systemctl is-active apache2"
+        value={form.validationRule}
+        onChange={(e) =>
+          setForm({
+            ...form,
+            validationRule: e.target.value,
+          })
+        }
+      />
+    </div>
+
+    <div className="form-group">
+      <label className="form-label">
+        Expected Outcome (Optional)
+      </label>
+
+      <input
+        type="text"
+        className="form-input"
+        placeholder="Leave empty for exit-code validation"
+        value={form.expectedOutcome}
+        onChange={(e) =>
+          setForm({
+            ...form,
+            expectedOutcome: e.target.value,
+          })
+        }
+      />
+    </div>
+  </>
+)}
+
+{validationType === "DIRECTORY_EXISTS" && (
+  <div className="form-group">
+    <label className="form-label">
+      Directory Path
+    </label>
+
+    <input
+      type="text"
+      className="form-input"
+      placeholder="e.g. docs"
+      value={directoryPath}
+      onChange={(e) =>
+        setDirectoryPath(e.target.value)
+      }
+    />
+  </div>
+)}
+
+{validationType === "FILE_EXISTS" && (
+  <div className="form-group">
+    <label className="form-label">
+      File Path
+    </label>
+
+    <input
+      type="text"
+      className="form-input"
+      placeholder="e.g. docs/readme.txt"
+      value={filePath}
+      onChange={(e) =>
+        setFilePath(e.target.value)
+      }
+    />
+  </div>
+)}
+
+{validationType === "FILE_CONTAINS" && (
+  <>
+    <div className="form-group">
+      <label className="form-label">
+        File Path
+      </label>
+
+      <input
+        type="text"
+        className="form-input"
+        placeholder="e.g. docs/readme.txt"
+        value={filePath}
+        onChange={(e) =>
+          setFilePath(e.target.value)
+        }
+      />
+    </div>
+
+    <div className="form-group">
+      <label className="form-label">
+        Expected Text
+      </label>
+
+      <input
+        type="text"
+        className="form-input"
+        placeholder="e.g. Hello ChallengeLabs"
+        value={fileContent}
+        onChange={(e) =>
+          setFileContent(e.target.value)
+        }
+      />
+    </div>
+  </>
+)}
+
+{validationType === "PERMISSION" && (
+  <>
+    <div className="form-group">
+      <label className="form-label">
+        File Path
+      </label>
+
+      <input
+        type="text"
+        className="form-input"
+        placeholder="e.g. script.sh"
+        value={filePath}
+        onChange={(e) =>
+          setFilePath(e.target.value)
+        }
+      />
+    </div>
+
+    <div className="form-group">
+      <label className="form-label">
+        Permission
+      </label>
+
+      <input
+        type="text"
+        className="form-input"
+        placeholder="e.g. 755"
+        value={permission}
+        onChange={(e) =>
+          setPermission(e.target.value)
+        }
+      />
+    </div>
+  </>
+)}
+
+
 
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '12px' }}>
             <button

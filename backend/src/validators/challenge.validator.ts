@@ -18,6 +18,7 @@ export const createChallengeSchema = z.object({
   difficulty: z.enum(['BEGINNER', 'INTERMEDIATE', 'ADVANCED']),
   dockerImage: z.string()
     .min(5, "Docker image is required"),
+    setupScript: z.string().optional(),
   estimatedMinutes: z.number()
     .int("Estimated minutes must be an integer")
     .min(5, "Estimated time must be at least 5 minutes")
@@ -27,18 +28,7 @@ export const createChallengeSchema = z.object({
 
 export const updateChallengeSchema = createChallengeSchema.partial();
 
-const validationTypeSchema = z.enum([
-  "COMMAND",
-  "DIRECTORY_EXISTS",
-  "FILE_EXISTS",
-  "FILE_CONTAINS",
-  "COMMAND_OUTPUT",
-  "REGEX",
-  "PERMISSION",
-  "USER_EXISTS",
-  "PROCESS_RUNNING",
-  "CUSTOM_SCRIPT",
-]);
+
 
 export const createTaskSchema = z.object({
   title: z.string()
@@ -54,11 +44,6 @@ export const createTaskSchema = z.object({
 validationRule: z.string().optional(),
 expectedOutcome: z.string().optional(),
 
-validationType: validationTypeSchema
-  .optional()
-  .default("COMMAND"),
-
-validationConfig: z.any().optional(),
 });
 
 export const updateTaskSchema = createTaskSchema.partial();

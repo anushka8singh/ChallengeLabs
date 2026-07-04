@@ -87,7 +87,16 @@ if (activeSession) {
 
       // 6. Start container
       await dockerService.startContainer(containerId);
-
+// 6.5 Execute challenge setup script (if configured)
+if (
+  challenge.setupScript &&
+  challenge.setupScript.trim() !== ""
+) {
+  await dockerService.execInContainer(
+    containerId,
+    challenge.setupScript
+  );
+}
       // 7. Calculate expiration
       const expiresAt = new Date(Date.now() + this.SESSION_DURATION_MINUTES * 60 * 1000);
 

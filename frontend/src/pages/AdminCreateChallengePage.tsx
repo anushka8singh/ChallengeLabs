@@ -20,6 +20,7 @@ const AdminCreateChallengePage = () => {
       description: '',
       difficulty: 'BEGINNER',
       dockerImage: '',
+      setupScript: '',
       estimatedMinutes: 30,
       isPublished: false,
     });
@@ -148,7 +149,34 @@ const AdminCreateChallengePage = () => {
               required
             />
           </div>
+                <div className="form-group">
+  <label className="form-label">
+    Setup Script (Optional)
+  </label>
 
+  <textarea
+    className="form-input"
+    style={{
+      minHeight: "180px",
+      resize: "vertical",
+      fontFamily: "monospace",
+    }}
+    placeholder={`# Commands executed automatically when the challenge starts
+
+touch hello.txt
+
+mkdir docs
+
+echo "Hello ChallengeLabs" > docs/readme.txt`}
+    value={form.setupScript}
+    onChange={(e) =>
+      setForm({
+        ...form,
+        setupScript: e.target.value,
+      })
+    }
+  />
+</div>
           <div className="form-group">
             <label className="form-label">Estimated Minutes</label>
             <input

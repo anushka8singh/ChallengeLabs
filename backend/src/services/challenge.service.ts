@@ -93,18 +93,52 @@ export class ChallengeService {
   }
 
   // Task management
-  async createTask(challengeId: string, data: CreateTaskInput, userRole: string) {
-    if (userRole !== 'ADMIN') {
-      throw new AppError('Only admins can create tasks', 403);
-    }
-
-    const challenge = await challengeRepository.findById(challengeId);
-    if (!challenge) {
-      throw new AppError('Challenge not found', 404);
-    }
-
-    return challengeRepository.createTask(challengeId, data);
+  async createTask(
+  challengeId: string,
+  data: CreateTaskInput,
+  userRole: string
+) {
+  if (userRole !== "ADMIN") {
+    throw new AppError(
+      "Only admins can create tasks",
+      403
+    );
   }
+
+  const challenge =
+    await challengeRepository.findById(
+      challengeId
+    );
+
+  if (!challenge) {
+    throw new AppError(
+      "Challenge not found",
+      404
+    );
+  }
+
+  // Create ChallengeTask
+  const task =
+    await challengeRepository.createTask(
+      challengeId,
+      data
+    );
+
+  // Automatically create default COMMAND validation
+  if (
+    data.validationRule &&
+    data.validationRule.trim() !== ""
+  ) {
+    await challengeRepository.createTaskValidation(
+      task.id,
+      data.validationRule,
+      data.expectedOutcome
+    );
+  }
+
+  return task;
+}
+
 async getTaskById(taskId: string) {
   const task =
     await challengeRepository.findTaskById(taskId);
@@ -118,18 +152,69 @@ async getTaskById(taskId: string) {
 
   return task;
 }
-  async updateTask(taskId: string, data: UpdateTaskInput, userRole: string) {
-    if (userRole !== 'ADMIN') {
-      throw new AppError('Only admins can update tasks', 403);
-    }
-
-    const task = await challengeRepository.findTaskById(taskId);
-    if (!task) {
-      throw new AppError('Task not found', 404);
-    }
-
-    return challengeRepository.updateTask(taskId, data);
+  async updateTask(
+  taskId: string,
+  data: UpdateTaskInput,
+  userRole: string
+) {
+  if (userRole !== "ADMIN") {
+    throw new AppError(
+      "Only admins can update tasks",
+      403
+    );
   }
+
+  const existingTask =
+    await challengeRepository.findTaskById(taskId);
+
+  if (!existingTask) {
+    throw new AppError(
+      "Task not found",
+      404
+    );
+  }
+
+  // Update the task first
+  const updatedTask =
+    await challengeRepository.updateTask(
+      taskId,
+      data
+    );
+
+  // Keep COMMAND validation in sync
+  if (
+    data.validationRule !== undefined
+  ) {
+
+    const existingValidation =
+      await challengeRepository.findCommandValidation(
+        taskId
+      );
+
+    if (existingValidation) {
+
+      await challengeRepository.updateTaskValidation(
+        existingValidation.id,
+        data.validationRule,
+        data.expectedOutcome
+      );
+
+    } else if (
+      data.validationRule.trim() !== ""
+    ) {
+
+      await challengeRepository.createTaskValidation(
+        taskId,
+        data.validationRule,
+        data.expectedOutcome
+      );
+
+    }
+
+  }
+
+  return updatedTask;
+}
 
   async deleteTask(taskId: string, userRole: string) {
     if (userRole !== 'ADMIN') {

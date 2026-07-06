@@ -193,37 +193,55 @@ async getTaskById(taskId: string) {
       data
     );
 
-  // Keep COMMAND validation in sync
-  if (
-    data.validationRule !== undefined
-  ) {
+  
+     // Update structured validation
+if (
+  data.validationType &&
+  data.validationConfig
+) {
+  const existingValidation =
+    existingTask.validations?.[0];
 
-    const existingValidation =
-      await challengeRepository.findCommandValidation(
-        taskId
-      );
-
-    if (existingValidation) {
-
-      await challengeRepository.updateTaskValidation(
-        existingValidation.id,
-        data.validationRule,
-        data.expectedOutcome
-      );
-
-    } else if (
-      data.validationRule.trim() !== ""
-    ) {
-
-      await challengeRepository.createTaskValidation(
-        taskId,
-        data.validationRule,
-        data.expectedOutcome
-      );
-
-    }
-
+  if (existingValidation) {
+    await challengeRepository.updateStructuredTaskValidation(
+      existingValidation.id,
+      data.validationType,
+      data.validationConfig as Prisma.InputJsonValue
+    );
+  } else {
+    await challengeRepository.createStructuredTaskValidation(
+      taskId,
+      data.validationType,
+      data.validationConfig as Prisma.InputJsonValue
+    );
   }
+}
+
+// Temporary legacy fallback
+else if (
+  data.validationRule !== undefined
+) {
+  const existingValidation =
+    await challengeRepository.findCommandValidation(
+      taskId
+    );
+
+  if (existingValidation) {
+    await challengeRepository.updateTaskValidation(
+      existingValidation.id,
+      data.validationRule,
+      data.expectedOutcome
+    );
+  } else if (
+    data.validationRule.trim() !== ""
+  ) {
+    await challengeRepository.createTaskValidation(
+      taskId,
+      data.validationRule,
+      data.expectedOutcome
+    );
+  }
+}
 
   return updatedTask;
 }

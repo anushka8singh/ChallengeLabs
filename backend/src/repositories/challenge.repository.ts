@@ -216,12 +216,39 @@ async updateTaskValidation(
   });
 }
 
-  async updateTask(taskId: string, data: UpdateTaskInput): Promise<ChallengeTask> {
-    return prisma.challengeTask.update({
-      where: { id: taskId },
-      data,
-    });
-  }
+async updateStructuredTaskValidation(
+  validationId: string,
+  type: PrismaValidationType,
+  config: Prisma.InputJsonValue
+) {
+  return prisma.taskValidation.update({
+    where: {
+      id: validationId,
+    },
+    data: {
+      type,
+      config,
+    },
+  });
+}
+
+  async updateTask(
+  taskId: string,
+  data: UpdateTaskInput
+): Promise<ChallengeTask> {
+  const {
+    validationType,
+    validationConfig,
+    ...taskData
+  } = data;
+
+  return prisma.challengeTask.update({
+    where: {
+      id: taskId,
+    },
+    data: taskData,
+  });
+}
 
   async deleteTask(taskId: string): Promise<ChallengeTask> {
     return prisma.challengeTask.delete({
@@ -229,11 +256,21 @@ async updateTaskValidation(
     });
   }
 
-  async findTaskById(taskId: string): Promise<ChallengeTask | null> {
-    return prisma.challengeTask.findUnique({
-      where: { id: taskId },
-    });
-  }
+  async findTaskById(taskId: string) {
+  return prisma.challengeTask.findUnique({
+    where: {
+      id: taskId,
+    },
+    include: {
+      validations: {
+        orderBy: {
+          order: 'asc',
+        },
+      },
+    },
+  });
+}
+
 async findTaskValidations(
   taskId: string
 ): Promise<ValidationTask[]> {

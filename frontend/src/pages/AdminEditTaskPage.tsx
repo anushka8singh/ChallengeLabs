@@ -18,6 +18,22 @@ const AdminEditTaskPage = () => {
   const [saving, setSaving] =
     useState(false);
 
+    const [validationType, setValidationType] =
+  useState('COMMAND');
+
+const [directoryPath, setDirectoryPath] =
+  useState('');
+
+const [filePath, setFilePath] =
+  useState('');
+
+const [fileContent, setFileContent] =
+  useState('');
+
+const [permission, setPermission] =
+  useState('');
+
+
   const [form, setForm] = useState({
     title: '',
     description: '',
@@ -34,7 +50,6 @@ const AdminEditTaskPage = () => {
       .then((res) => {
         if (res.success) {
           const task = res.data;
-
           setForm({
             title: task.title,
             description:
@@ -46,6 +61,59 @@ const AdminEditTaskPage = () => {
             expectedOutcome:
               task.expectedOutcome ?? '',
           });
+
+          const validation =
+  task.validations?.[0];
+
+if (validation) {
+  setValidationType(validation.type);
+
+  const config = validation.config ?? {};
+
+  switch (validation.type) {
+    case 'DIRECTORY_EXISTS':
+      setDirectoryPath(
+        config.directories?.[0] ?? ''
+      );
+      break;
+
+    case 'FILE_EXISTS':
+      setFilePath(
+        config.files?.[0] ?? ''
+      );
+      break;
+
+    case 'FILE_CONTAINS':
+      setFilePath(
+        config.file ?? ''
+      );
+
+      setFileContent(
+        config.contains ?? ''
+      );
+      break;
+
+    case 'PERMISSION':
+      setFilePath(
+        config.file ?? ''
+      );
+
+      setPermission(
+        config.permission ?? ''
+      );
+      break;
+
+    case 'COMMAND':
+      setForm((current) => ({
+        ...current,
+        validationRule:
+          config.command ?? '',
+        expectedOutcome:
+          config.expectedOutput ?? '',
+      }));
+      break;
+  }
+}
         }
       })
       .finally(() =>
@@ -63,10 +131,58 @@ const AdminEditTaskPage = () => {
     try {
       setSaving(true);
 
-      await updateTask(
-        taskId,
-        form
-      );
+      let validationConfig: Record<string, unknown>;
+
+switch (validationType) {
+  case 'DIRECTORY_EXISTS':
+    validationConfig = {
+      directories: [directoryPath],
+    };
+    break;
+
+  case 'FILE_EXISTS':
+    validationConfig = {
+      files: [filePath],
+    };
+    break;
+
+  case 'FILE_CONTAINS':
+    validationConfig = {
+      file: filePath,
+      contains: fileContent,
+    };
+    break;
+
+  case 'PERMISSION':
+    validationConfig = {
+      file: filePath,
+      permission,
+    };
+    break;
+
+  case 'COMMAND':
+  default:
+    validationConfig = {
+      command: form.validationRule,
+      expectedOutput:
+        form.expectedOutcome || undefined,
+    };
+    break;
+}
+
+const payload = {
+  title: form.title,
+  description: form.description,
+  order: form.order,
+  hint: form.hint,
+  validationType,
+  validationConfig,
+};
+
+await updateTask(
+  taskId,
+  payload
+);
 
       toast.success(
         'Task updated successfully'
@@ -170,37 +286,189 @@ const AdminEditTaskPage = () => {
             />
           </div>
 
-          <div className="form-group">
-            <label className="form-label">Validation Rule (Command or Script)</label>
-            <input
-              type="text"
-              className="form-input"
-              placeholder="e.g. systemctl is-active apache2"
-              value={form.validationRule}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  validationRule: e.target.value,
-                })
-              }
-            />
-          </div>
+           <div className="form-group">
+  <label className="form-label">
+    Validation Type
+  </label>
 
-          <div className="form-group">
-            <label className="form-label">Expected Outcome (Output pattern to match)</label>
-            <input
-              type="text"
-              className="form-input"
-              placeholder="e.g. active"
-              value={form.expectedOutcome}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  expectedOutcome: e.target.value,
-                })
-              }
-            />
-          </div>
+  <select
+    className="form-input"
+    value={validationType}
+    onChange={(e) =>
+      setValidationType(e.target.value)
+    }
+  >
+    <option value="COMMAND">
+      Command
+    </option>
+
+    <option value="DIRECTORY_EXISTS">
+      Directory Exists
+    </option>
+
+    <option value="FILE_EXISTS">
+      File Exists
+    </option>
+
+    <option value="FILE_CONTAINS">
+      File Contains
+    </option>
+
+    <option value="PERMISSION">
+      Permission
+    </option>
+  </select>
+</div>
+         
+          {validationType === "COMMAND" && (
+  <>
+    <div className="form-group">
+      <label className="form-label">
+        Validation Rule
+      </label>
+
+      <input
+        type="text"
+        className="form-input"
+        placeholder="e.g. systemctl is-active apache2"
+        value={form.validationRule}
+        onChange={(e) =>
+          setForm({
+            ...form,
+            validationRule: e.target.value,
+          })
+        }
+      />
+    </div>
+
+    <div className="form-group">
+      <label className="form-label">
+        Expected Outcome (Optional)
+      </label>
+
+      <input
+        type="text"
+        className="form-input"
+        placeholder="Leave empty for exit-code validation"
+        value={form.expectedOutcome}
+        onChange={(e) =>
+          setForm({
+            ...form,
+            expectedOutcome: e.target.value,
+          })
+        }
+      />
+    </div>
+  </>
+)}
+
+{validationType === "DIRECTORY_EXISTS" && (
+  <div className="form-group">
+    <label className="form-label">
+      Directory Path
+    </label>
+
+    <input
+      type="text"
+      className="form-input"
+      placeholder="e.g. docs"
+      value={directoryPath}
+      onChange={(e) =>
+        setDirectoryPath(e.target.value)
+      }
+    />
+  </div>
+)}
+
+{validationType === "FILE_EXISTS" && (
+  <div className="form-group">
+    <label className="form-label">
+      File Path
+    </label>
+
+    <input
+      type="text"
+      className="form-input"
+      placeholder="e.g. docs/readme.txt"
+      value={filePath}
+      onChange={(e) =>
+        setFilePath(e.target.value)
+      }
+    />
+  </div>
+)}
+
+{validationType === "FILE_CONTAINS" && (
+  <>
+    <div className="form-group">
+      <label className="form-label">
+        File Path
+      </label>
+
+      <input
+        type="text"
+        className="form-input"
+        placeholder="e.g. docs/readme.txt"
+        value={filePath}
+        onChange={(e) =>
+          setFilePath(e.target.value)
+        }
+      />
+    </div>
+
+    <div className="form-group">
+      <label className="form-label">
+        Expected Text
+      </label>
+
+      <input
+        type="text"
+        className="form-input"
+        placeholder="e.g. Hello ChallengeLabs"
+        value={fileContent}
+        onChange={(e) =>
+          setFileContent(e.target.value)
+        }
+      />
+    </div>
+  </>
+)}
+
+{validationType === "PERMISSION" && (
+  <>
+    <div className="form-group">
+      <label className="form-label">
+        File Path
+      </label>
+
+      <input
+        type="text"
+        className="form-input"
+        placeholder="e.g. script.sh"
+        value={filePath}
+        onChange={(e) =>
+          setFilePath(e.target.value)
+        }
+      />
+    </div>
+
+    <div className="form-group">
+      <label className="form-label">
+        Permission
+      </label>
+
+      <input
+        type="text"
+        className="form-input"
+        placeholder="e.g. 755"
+        value={permission}
+        onChange={(e) =>
+          setPermission(e.target.value)
+        }
+      />
+    </div>
+  </>
+)}
 
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '12px' }}>
             <button

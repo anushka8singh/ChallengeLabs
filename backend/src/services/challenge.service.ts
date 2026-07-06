@@ -3,7 +3,7 @@
 // Business logic for Challenge Management (Phase 4)
 // Handles authorization checks, validation, and data transformation
 // ===========================================
-
+import { Prisma } from '@prisma/client';
 import { challengeRepository } from '../repositories/challenge.repository';
 import { AppError } from '../middleware/errorHandler';
 import { CreateChallengeInput, CreateTaskInput, UpdateChallengeInput, UpdateTaskInput } from '../validators/challenge.validator';
@@ -124,17 +124,29 @@ export class ChallengeService {
       data
     );
 
-  // Automatically create default COMMAND validation
-  if (
-    data.validationRule &&
-    data.validationRule.trim() !== ""
-  ) {
-    await challengeRepository.createTaskValidation(
-      task.id,
-      data.validationRule,
-      data.expectedOutcome
-    );
-  }
+  // Create structured validation using the new framework
+if (
+  data.validationType &&
+  data.validationConfig
+) {
+  await challengeRepository.createStructuredTaskValidation(
+  task.id,
+  data.validationType,
+  data.validationConfig as Prisma.InputJsonValue
+);
+}
+
+// Temporary legacy fallback
+else if (
+  data.validationRule &&
+  data.validationRule.trim() !== ""
+) {
+  await challengeRepository.createTaskValidation(
+    task.id,
+    data.validationRule,
+    data.expectedOutcome
+  );
+}
 
   return task;
 }

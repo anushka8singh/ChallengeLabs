@@ -4,6 +4,8 @@
 // ===========================================
 
 import { z } from 'zod';
+import { ValidationType } from '@prisma/client';
+
 
 export const createChallengeSchema = z.object({
   title: z.string()
@@ -43,6 +45,13 @@ export const createTaskSchema = z.object({
 
 validationRule: z.string().optional(),
 expectedOutcome: z.string().optional(),
+
+validationType: z.nativeEnum(ValidationType).optional(),
+
+validationConfig: z.record(
+  z.string(),
+  z.unknown()
+).optional(),
 
 });
 

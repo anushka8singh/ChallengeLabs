@@ -5,7 +5,13 @@
 // ===========================================
 
 import { prisma } from '../config/prisma';
-import { Challenge, ChallengeTask, Difficulty } from '@prisma/client';
+import {
+  Challenge,
+  ChallengeTask,
+  Difficulty,
+  Prisma,
+  ValidationType as PrismaValidationType,
+} from '@prisma/client';
 import { CreateChallengeInput, CreateTaskInput, UpdateChallengeInput, UpdateTaskInput } from '../validators/challenge.validator';
 import { ValidationTask } from "../validation/types/ValidationTask";
 import { ValidationType } from "../validation/types/ValidationType";
@@ -152,6 +158,22 @@ async createTaskValidation(
         command: validationRule,
         expectedOutput: expectedOutcome ?? "",
       },
+      order: 1,
+      isRequired: true,
+    },
+  });
+}
+
+async createStructuredTaskValidation(
+  taskId: string,
+  type: PrismaValidationType,
+  config: Prisma.InputJsonValue
+) {
+  return prisma.taskValidation.create({
+    data: {
+      taskId,
+      type,
+      config,
       order: 1,
       isRequired: true,
     },

@@ -137,14 +137,23 @@ export class ChallengeRepository {
   // TASK OPERATIONS
   // ===========================================
 
-  async createTask(challengeId: string, data: CreateTaskInput): Promise<ChallengeTask> {
-    return prisma.challengeTask.create({
-      data: {
-        ...data,
-        challengeId,
-      },
-    });
-  }
+  async createTask(
+  challengeId: string,
+  data: CreateTaskInput
+): Promise<ChallengeTask> {
+  const {
+    validationType,
+    validationConfig,
+    ...taskData
+  } = data;
+
+  return prisma.challengeTask.create({
+    data: {
+      ...taskData,
+      challengeId,
+    },
+  });
+}
 async createTaskValidation(
   taskId: string,
   validationRule: string,

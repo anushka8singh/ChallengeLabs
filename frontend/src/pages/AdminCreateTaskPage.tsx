@@ -39,49 +39,53 @@ const [permission, setPermission] = useState("");
     try {
       setLoading(true);
 
-     const payload = {
-  ...form,
-};
+     let validationConfig: Record<string, unknown>;
 
 switch (validationType) {
-
   case "DIRECTORY_EXISTS":
-
-    payload.validationRule =
-      `test -d "${directoryPath}"`;
-
-    payload.expectedOutcome = "";
-
+    validationConfig = {
+      directories: [directoryPath],
+    };
     break;
 
   case "FILE_EXISTS":
-
-    payload.validationRule =
-      `test -f "${filePath}"`;
-
-    payload.expectedOutcome = "";
-
+    validationConfig = {
+      files: [filePath],
+    };
     break;
 
   case "FILE_CONTAINS":
-
-    payload.validationRule =
-      `grep -q '${fileContent}' "${filePath}"`;
-
-    payload.expectedOutcome = "";
-
+    validationConfig = {
+      file: filePath,
+      contains: fileContent,
+    };
     break;
 
   case "PERMISSION":
-
-    payload.validationRule =
-      `[ "$(stat -c '%a' "${filePath}")" = "${permission}" ]`;
-
-    payload.expectedOutcome = "";
-
+    validationConfig = {
+      file: filePath,
+      permission,
+    };
     break;
 
+  case "COMMAND":
+  default:
+    validationConfig = {
+      command: form.validationRule,
+      expectedOutput:
+        form.expectedOutcome || undefined,
+    };
+    break;
 }
+
+const payload = {
+  title: form.title,
+  description: form.description,
+  order: form.order,
+  hint: form.hint,
+  validationType,
+  validationConfig,
+};
 
 await createTask(
   challengeId,

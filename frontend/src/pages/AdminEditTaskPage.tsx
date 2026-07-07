@@ -310,7 +310,7 @@ await updateTask(
     </option>
   </select>
 </div>
-         
+
           {validationType === "COMMAND" && (
   <>
     <div className="form-group">

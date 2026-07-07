@@ -55,7 +55,7 @@ export interface AdminTask {
   description: string;
   order: number;
   hint?: string | null;
- 
+
 }
 
 interface TasksResponse {
@@ -142,7 +142,7 @@ export const updateTask = async (
     description: string;
     order: number;
     hint?: string;
-   
+
   }
 ) => {
   const res = await api.put(

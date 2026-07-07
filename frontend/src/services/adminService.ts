@@ -55,8 +55,7 @@ export interface AdminTask {
   description: string;
   order: number;
   hint?: string | null;
-  validationRule?: string | null;
-  expectedOutcome?: string | null;
+ 
 }
 
 interface TasksResponse {
@@ -79,8 +78,7 @@ export interface CreateTaskPayload {
   description: string;
   order: number;
   hint?: string;
-  validationRule?: string;
-  expectedOutcome?: string;
+
 }
 
 export const createTask = async (
@@ -144,8 +142,7 @@ export const updateTask = async (
     description: string;
     order: number;
     hint?: string;
-    validationRule?: string;
-    expectedOutcome?: string;
+   
   }
 ) => {
   const res = await api.put(

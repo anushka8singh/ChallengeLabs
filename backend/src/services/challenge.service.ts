@@ -136,18 +136,6 @@ if (
 );
 }
 
-// Temporary legacy fallback
-else if (
-  data.validationRule &&
-  data.validationRule.trim() !== ""
-) {
-  await challengeRepository.createTaskValidation(
-    task.id,
-    data.validationRule,
-    data.expectedOutcome
-  );
-}
-
   return task;
 }
 
@@ -213,32 +201,6 @@ if (
       taskId,
       data.validationType,
       data.validationConfig as Prisma.InputJsonValue
-    );
-  }
-}
-
-// Temporary legacy fallback
-else if (
-  data.validationRule !== undefined
-) {
-  const existingValidation =
-    await challengeRepository.findCommandValidation(
-      taskId
-    );
-
-  if (existingValidation) {
-    await challengeRepository.updateTaskValidation(
-      existingValidation.id,
-      data.validationRule,
-      data.expectedOutcome
-    );
-  } else if (
-    data.validationRule.trim() !== ""
-  ) {
-    await challengeRepository.createTaskValidation(
-      taskId,
-      data.validationRule,
-      data.expectedOutcome
     );
   }
 }

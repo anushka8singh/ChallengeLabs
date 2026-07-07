@@ -61,8 +61,7 @@ export class ChallengeRepository {
             description: true,
             order: true,
             hint: true,
-            validationRule: true,
-            expectedOutcome: true,
+            
           },
         },
       },
@@ -154,24 +153,7 @@ export class ChallengeRepository {
     },
   });
 }
-async createTaskValidation(
-  taskId: string,
-  validationRule: string,
-  expectedOutcome?: string
-) {
-  return prisma.taskValidation.create({
-    data: {
-      taskId,
-      type: "COMMAND",
-      config: {
-        command: validationRule,
-        expectedOutput: expectedOutcome ?? "",
-      },
-      order: 1,
-      isRequired: true,
-    },
-  });
-}
+
 
 async createStructuredTaskValidation(
   taskId: string,
@@ -185,33 +167,6 @@ async createStructuredTaskValidation(
       config,
       order: 1,
       isRequired: true,
-    },
-  });
-}
-
-async findCommandValidation(taskId: string) {
-  return prisma.taskValidation.findFirst({
-    where: {
-      taskId,
-      type: "COMMAND",
-    },
-  });
-}
-
-async updateTaskValidation(
-  validationId: string,
-  validationRule: string,
-  expectedOutcome?: string
-) {
-  return prisma.taskValidation.update({
-    where: {
-      id: validationId,
-    },
-    data: {
-      config: {
-        command: validationRule,
-        expectedOutput: expectedOutcome ?? "",
-      },
     },
   });
 }

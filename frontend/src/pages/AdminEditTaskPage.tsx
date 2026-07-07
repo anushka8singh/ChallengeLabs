@@ -33,14 +33,14 @@ const [fileContent, setFileContent] =
 const [permission, setPermission] =
   useState('');
 
+const [command, setCommand] = useState('');
+const [expectedOutput, setExpectedOutput] = useState('');
 
   const [form, setForm] = useState({
     title: '',
     description: '',
     order: 1,
     hint: '',
-    validationRule: '',
-    expectedOutcome: '',
   });
 
   useEffect(() => {
@@ -56,10 +56,6 @@ const [permission, setPermission] =
               task.description,
             order: task.order,
             hint: task.hint ?? '',
-            validationRule:
-              task.validationRule ?? '',
-            expectedOutcome:
-              task.expectedOutcome ?? '',
           });
 
           const validation =
@@ -104,13 +100,8 @@ if (validation) {
       break;
 
     case 'COMMAND':
-      setForm((current) => ({
-        ...current,
-        validationRule:
-          config.command ?? '',
-        expectedOutcome:
-          config.expectedOutput ?? '',
-      }));
+      setCommand(config.command ?? '');
+setExpectedOutput(config.expectedOutput ?? '');
       break;
   }
 }
@@ -163,10 +154,10 @@ switch (validationType) {
   case 'COMMAND':
   default:
     validationConfig = {
-      command: form.validationRule,
-      expectedOutput:
-        form.expectedOutcome || undefined,
-    };
+  command,
+  expectedOutput:
+    expectedOutput || undefined,
+};
     break;
 }
 
@@ -331,13 +322,8 @@ await updateTask(
         type="text"
         className="form-input"
         placeholder="e.g. systemctl is-active apache2"
-        value={form.validationRule}
-        onChange={(e) =>
-          setForm({
-            ...form,
-            validationRule: e.target.value,
-          })
-        }
+       value={command}
+onChange={(e) => setCommand(e.target.value)}
       />
     </div>
 
@@ -350,13 +336,8 @@ await updateTask(
         type="text"
         className="form-input"
         placeholder="Leave empty for exit-code validation"
-        value={form.expectedOutcome}
-        onChange={(e) =>
-          setForm({
-            ...form,
-            expectedOutcome: e.target.value,
-          })
-        }
+       value={expectedOutput}
+onChange={(e) => setExpectedOutput(e.target.value)}
       />
     </div>
   </>

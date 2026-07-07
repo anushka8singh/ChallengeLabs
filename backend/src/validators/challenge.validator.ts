@@ -43,8 +43,6 @@ export const createTaskSchema = z.object({
     .min(1, "Order must be at least 1"),
  hint: z.string().optional(),
 
-validationRule: z.string().optional(),
-expectedOutcome: z.string().optional(),
 
 validationType: z.nativeEnum(ValidationType).optional(),
 

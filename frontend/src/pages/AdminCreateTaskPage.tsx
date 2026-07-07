@@ -25,10 +25,10 @@ const [permission, setPermission] = useState("");
     description: '',
     order: 1,
     hint: '',
-    validationRule: '',
-    expectedOutcome: '',
+    
   });
-
+const [command, setCommand] = useState('');
+const [expectedOutput, setExpectedOutput] = useState('');
   const handleSubmit = async (
     e: React.FormEvent
   ) => {
@@ -71,10 +71,10 @@ switch (validationType) {
   case "COMMAND":
   default:
     validationConfig = {
-      command: form.validationRule,
-      expectedOutput:
-        form.expectedOutcome || undefined,
-    };
+  command,
+  expectedOutput:
+    expectedOutput || undefined,
+};
     break;
 }
 
@@ -237,13 +237,10 @@ await createTask(
         type="text"
         className="form-input"
         placeholder="e.g. systemctl is-active apache2"
-        value={form.validationRule}
-        onChange={(e) =>
-          setForm({
-            ...form,
-            validationRule: e.target.value,
-          })
-        }
+        value={command}
+onChange={(e) => setCommand(e.target.value)}
+      
+        
       />
     </div>
 
@@ -256,13 +253,9 @@ await createTask(
         type="text"
         className="form-input"
         placeholder="Leave empty for exit-code validation"
-        value={form.expectedOutcome}
-        onChange={(e) =>
-          setForm({
-            ...form,
-            expectedOutcome: e.target.value,
-          })
-        }
+        value={expectedOutput}
+onChange={(e) => setExpectedOutput(e.target.value)}
+       
       />
     </div>
   </>

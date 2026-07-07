@@ -2,7 +2,7 @@
 // ===========================================
 // Validation Service
 // Task Validation Engine + Analytics + Progress support (Phase 6/7)
-// Supports BOTH legacy validationRule and new Validation Engine
+// // Structured Task Validation Engine
 // ===========================================
 
 import { prisma } from '../config/prisma';
@@ -17,10 +17,8 @@ import {
 } from "@prisma/client";
 import {
   ValidationExecutor,
-  ValidationFactory,
   ValidationResult,
   ValidationTask,
-  ValidationType,
 } from "../validation";
 
 const validationLogger = logger.child({ service: 'validation' });
@@ -76,48 +74,27 @@ export class ValidationService {
     if (!session.containerId) throw new AppError('No container associated with this session', 400);
 
     // Decide between legacy and new engine
-    const taskValidations = await challengeRepository.findTaskValidations(task.id);
+   const taskValidations =
+  await challengeRepository.findTaskValidations(
+    task.id
+  );
 
-    if (taskValidations && taskValidations.length > 0) {
-     return this.validateWithExecutor(
+if (taskValidations.length === 0) {
+  throw new AppError(
+    'No validation configured for this task',
+    400
+  );
+}
+
+return this.validateWithExecutor(
   task,
   session,
   taskValidations,
   userId
 );
-    } else {
-      return this.validateLegacyTask(task, session, userId);
-    }
   }
 
-  private async validateLegacyTask(
-  task: ChallengeTask,
-  session: Session,
-  userId: string
-): Promise<any> {
 
-  const strategy =
-    ValidationFactory.getStrategy(
-      ValidationType.COMMAND
-    );
-
-  const validationResult =
-   await strategy.validate(
-    session.containerId!,
-      {
-        command: task.validationRule ?? "",
-        expectedOutput:
-          task.expectedOutcome ?? undefined,
-      }
-    );
-
-  return this.processValidationResult(
-    task,
-    session,
-    userId,
-    validationResult
-  );
-}
 
  private async validateWithExecutor(
   task: ChallengeTask,

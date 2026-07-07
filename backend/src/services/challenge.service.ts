@@ -44,7 +44,7 @@ export class ChallengeService {
     return challengeRepository.findAllForAdmin();
   }
 
-  
+
  async getChallengeByIdForAdmin(id: string) {
   const challenge =
     await challengeRepository.findById(id);
@@ -181,7 +181,7 @@ async getTaskById(taskId: string) {
       data
     );
 
-  
+
      // Update structured validation
 if (
   data.validationType &&

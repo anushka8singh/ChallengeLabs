@@ -61,7 +61,7 @@ export class ChallengeRepository {
             description: true,
             order: true,
             hint: true,
-            
+
           },
         },
       },

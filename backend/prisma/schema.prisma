@@ -75,7 +75,7 @@ model User {
   id           String @id @default(cuid())
   name         String
   email        String @unique
-  passwordHash String // Hashed using bcrypt 
+  passwordHash String // Hashed using bcrypt
   role         Role   @default(USER)
 
   createdAt DateTime @default(now())
@@ -140,8 +140,8 @@ model ChallengeTask {
   description String  @db.Text
   order       Int // Used for ordering tasks within a challenge
   hint        String? @db.Text
-  
-  
+
+
   createdAt DateTime @default(now())
 
   // ===========================================

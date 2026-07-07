@@ -25,7 +25,7 @@ const [permission, setPermission] = useState("");
     description: '',
     order: 1,
     hint: '',
-    
+
   });
 const [command, setCommand] = useState('');
 const [expectedOutput, setExpectedOutput] = useState('');
@@ -191,7 +191,7 @@ await createTask(
               }
             />
           </div>
-          
+
  <div className="form-group">
   <label className="form-label">
     Validation Type
@@ -225,7 +225,7 @@ await createTask(
     </option>
   </select>
 </div>
-         
+
           {validationType === "COMMAND" && (
   <>
     <div className="form-group">
@@ -239,8 +239,8 @@ await createTask(
         placeholder="e.g. systemctl is-active apache2"
         value={command}
 onChange={(e) => setCommand(e.target.value)}
-      
-        
+
+
       />
     </div>
 
@@ -255,7 +255,7 @@ onChange={(e) => setCommand(e.target.value)}
         placeholder="Leave empty for exit-code validation"
         value={expectedOutput}
 onChange={(e) => setExpectedOutput(e.target.value)}
-       
+
       />
     </div>
   </>

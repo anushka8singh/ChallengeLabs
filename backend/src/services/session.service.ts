@@ -29,12 +29,23 @@ export class SessionService {
     
     // 2. Check if user already has an active session for this challenge
     // 2. Check for any active session
-const activeSession =
+let activeSession =
   await sessionRepository.findActiveSessionByUser(
     userId
   );
 
-// User already has an active session
+// Expire an overdue session immediately instead of
+// resuming it or treating it as a session conflict.
+if (
+  activeSession &&
+  activeSession.status === SessionStatus.RUNNING &&
+  activeSession.expiresAt < new Date()
+) {
+  await this.expireSession(activeSession.id);
+  activeSession = null;
+}
+
+// User already has a genuinely active session
 if (activeSession) {
 
   // Same challenge -> resume
@@ -132,13 +143,15 @@ if (
 
       // Cleanup: stop and remove container if it was created
       if (containerId) {
-        try {
-          await dockerService.stopContainer(containerId);
-          await dockerService.removeContainer(containerId);
-        } catch (cleanupError) {
-          sessionLogger.warn({ containerId, error: cleanupError }, 'Cleanup failed');
-        }
-      }
+  try {
+    await dockerService.cleanupContainer(containerId);
+  } catch (cleanupError) {
+    sessionLogger.warn(
+      { containerId, error: cleanupError },
+      'Cleanup failed after session startup error'
+    );
+  }
+}
 
       // Mark as failed if session was created
       if (newSession) {
@@ -178,17 +191,19 @@ if (
     }
 
     if (session.containerId) {
-      try {
-        await dockerService.stopContainer(session.containerId);
-        await dockerService.removeContainer(session.containerId);
-      } catch (error: any) {
-        sessionLogger.warn(
-          { sessionId: session.id, containerId: session.containerId, error: error.message },
-          'Error stopping container (may already be stopped)'
-        );
-      }
-    }
-
+  try {
+    await dockerService.cleanupContainer(session.containerId);
+  } catch (error: any) {
+    sessionLogger.warn(
+      {
+        sessionId: session.id,
+        containerId: session.containerId,
+        error: error.message,
+      },
+      'Error cleaning up container during manual stop'
+    );
+  }
+}
     const updatedSession = await sessionRepository.stopSession(session.id);
 
     sessionLogger.info({ sessionId: session.id, userId }, 'Session stopped by user');
@@ -209,13 +224,21 @@ if (
 
     // Stop and remove current container
     if (currentSession.containerId) {
-      try {
-        await dockerService.stopContainer(currentSession.containerId);
-        await dockerService.removeContainer(currentSession.containerId);
-      } catch (error) {
-        sessionLogger.warn({ error }, 'Error cleaning up old container during reset');
-      }
-    }
+  try {
+    await dockerService.cleanupContainer(
+      currentSession.containerId
+    );
+  } catch (error) {
+    sessionLogger.warn(
+      {
+        sessionId: currentSession.id,
+        containerId: currentSession.containerId,
+        error,
+      },
+      'Error cleaning up old container during reset'
+    );
+  }
+}
 
     // Mark old session as stopped
     await sessionRepository.stopSession(currentSession.id);
@@ -233,14 +256,22 @@ if (
       return;
     }
 
-    if (session.containerId) {
-      try {
-        await dockerService.stopContainer(session.containerId);
-        await dockerService.removeContainer(session.containerId);
-      } catch (error) {
-        sessionLogger.warn({ sessionId, error }, 'Error cleaning up expired container');
-      }
-    }
+   if (session.containerId) {
+  try {
+    await dockerService.cleanupContainer(
+      session.containerId
+    );
+  } catch (error) {
+    sessionLogger.warn(
+      {
+        sessionId,
+        containerId: session.containerId,
+        error,
+      },
+      'Error cleaning up expired container'
+    );
+  }
+}
 
     await sessionRepository.expireSession(sessionId);
     sessionLogger.info({ sessionId }, 'Session expired and cleaned up');

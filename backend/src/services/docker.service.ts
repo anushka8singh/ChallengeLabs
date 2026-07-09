@@ -340,6 +340,41 @@ export class DockerService {
   }
 
   /**
+ * Safely stop and remove a container.
+ * This operation is idempotent and can be called multiple times.
+ */
+async cleanupContainer(containerId: string): Promise<void> {
+  try {
+    await this.stopContainer(containerId);
+  } catch (error: any) {
+    const message = error?.message ?? '';
+
+    if (!message.includes('404')) {
+      dockerLogger.warn(
+        { containerId, error: message },
+        'Container could not be stopped; continuing with removal'
+      );
+    }
+  }
+
+  try {
+    await this.removeContainer(containerId);
+  } catch (error: any) {
+    dockerLogger.error(
+      { containerId, error: error.message },
+      'Failed to clean up container'
+    );
+
+    throw error;
+  }
+
+  dockerLogger.info(
+    { containerId },
+    'Container cleanup completed'
+  );
+}
+
+  /**
    * Inspect container details
    */
   async inspectContainer(containerId: string): Promise<any> {

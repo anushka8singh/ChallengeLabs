@@ -8,7 +8,18 @@ const cleanupLogger = logger.child({
 });
 
 export class SessionCleanupService {
+  private isCleanupRunning = false;
+
   async cleanupExpiredSessions() {
+    if (this.isCleanupRunning) {
+      cleanupLogger.warn(
+        'Cleanup cycle skipped because the previous cycle is still running'
+      );
+      return;
+    }
+
+    this.isCleanupRunning = true;
+
     try {
       const expiredSessions = await prisma.session.findMany({
         where: {
@@ -31,7 +42,18 @@ export class SessionCleanupService {
       );
 
       for (const session of expiredSessions) {
-        await sessionService.expireSession(session.id);
+        try {
+          await sessionService.expireSession(session.id);
+        } catch (error: any) {
+          cleanupLogger.error(
+            {
+              sessionId: session.id,
+              containerId: session.containerId,
+              error: error.message,
+            },
+            'Failed cleaning individual expired session'
+          );
+        }
       }
     } catch (error: any) {
       cleanupLogger.error(
@@ -40,6 +62,8 @@ export class SessionCleanupService {
         },
         'Failed cleaning expired sessions'
       );
+    } finally {
+      this.isCleanupRunning = false;
     }
   }
 }

@@ -36,6 +36,37 @@ export class TaskController {
       next(error);
     }
   }
+
+  async markTaskComplete(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const { taskId } = req.params;
+
+    const { sessionId } =
+      req.body as StartValidationInput;
+
+    const userId = req.user!.userId;
+
+    const result =
+      await validationService.markTaskComplete(
+        taskId,
+        sessionId,
+        userId
+      );
+
+    res.status(200).json({
+      success: true,
+      data: result,
+      message: "Task completed successfully",
+    });
+
+  } catch (error) {
+    next(error);
+  }
+}
 }
 
 export const taskController =

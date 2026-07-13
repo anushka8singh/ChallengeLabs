@@ -18,8 +18,8 @@ const AdminEditTaskPage = () => {
   const [saving, setSaving] =
     useState(false);
 
-    const [validationType, setValidationType] =
-  useState('COMMAND');
+   const [validationType, setValidationType] =
+  useState('NONE');
 
 const [directoryPath, setDirectoryPath] =
   useState('');
@@ -61,47 +61,47 @@ const [expectedOutput, setExpectedOutput] = useState('');
           const validation =
   task.validations?.[0];
 
-if (validation) {
+if (!validation) {
+  setValidationType("NONE");
+} else {
+
   setValidationType(validation.type);
 
   const config = validation.config ?? {};
 
   switch (validation.type) {
-    case 'DIRECTORY_EXISTS':
+
+    case "DIRECTORY_EXISTS":
       setDirectoryPath(
-        config.directories?.[0] ?? ''
+        config.directories?.[0] ?? ""
       );
       break;
 
-    case 'FILE_EXISTS':
+    case "FILE_EXISTS":
       setFilePath(
-        config.files?.[0] ?? ''
+        config.files?.[0] ?? ""
       );
       break;
 
-    case 'FILE_CONTAINS':
-      setFilePath(
-        config.file ?? ''
-      );
-
+    case "FILE_CONTAINS":
+      setFilePath(config.file ?? "");
       setFileContent(
-        config.contains ?? ''
+        config.contains ?? ""
       );
       break;
 
-    case 'PERMISSION':
-      setFilePath(
-        config.file ?? ''
-      );
-
+    case "PERMISSION":
+      setFilePath(config.file ?? "");
       setPermission(
-        config.permission ?? ''
+        config.permission ?? ""
       );
       break;
 
-    case 'COMMAND':
-      setCommand(config.command ?? '');
-setExpectedOutput(config.expectedOutput ?? '');
+    case "COMMAND":
+      setCommand(config.command ?? "");
+      setExpectedOutput(
+        config.expectedOutput ?? ""
+      );
       break;
   }
 }
@@ -122,53 +122,64 @@ setExpectedOutput(config.expectedOutput ?? '');
     try {
       setSaving(true);
 
-      let validationConfig: Record<string, unknown>;
-
-switch (validationType) {
-  case 'DIRECTORY_EXISTS':
-    validationConfig = {
-      directories: [directoryPath],
-    };
-    break;
-
-  case 'FILE_EXISTS':
-    validationConfig = {
-      files: [filePath],
-    };
-    break;
-
-  case 'FILE_CONTAINS':
-    validationConfig = {
-      file: filePath,
-      contains: fileContent,
-    };
-    break;
-
-  case 'PERMISSION':
-    validationConfig = {
-      file: filePath,
-      permission,
-    };
-    break;
-
-  case 'COMMAND':
-  default:
-    validationConfig = {
-  command,
-  expectedOutput:
-    expectedOutput || undefined,
-};
-    break;
-}
-
-const payload = {
+      
+  let payload: any = {
   title: form.title,
   description: form.description,
   order: form.order,
   hint: form.hint,
-  validationType,
-  validationConfig,
 };
+
+if (validationType !== "NONE") {
+
+  let validationConfig: Record<
+    string,
+    unknown
+  >;
+
+  switch (validationType) {
+
+    case "DIRECTORY_EXISTS":
+      validationConfig = {
+        directories: [directoryPath],
+      };
+      break;
+
+    case "FILE_EXISTS":
+      validationConfig = {
+        files: [filePath],
+      };
+      break;
+
+    case "FILE_CONTAINS":
+      validationConfig = {
+        file: filePath,
+        contains: fileContent,
+      };
+      break;
+
+    case "PERMISSION":
+      validationConfig = {
+        file: filePath,
+        permission,
+      };
+      break;
+
+    case "COMMAND":
+    default:
+      validationConfig = {
+        command,
+        expectedOutput:
+          expectedOutput || undefined,
+      };
+  }
+
+  payload.validationType =
+    validationType;
+
+  payload.validationConfig =
+    validationConfig;
+}
 
 await updateTask(
   taskId,
@@ -282,33 +293,37 @@ await updateTask(
     Validation Type
   </label>
 
-  <select
-    className="form-input"
-    value={validationType}
-    onChange={(e) =>
-      setValidationType(e.target.value)
-    }
-  >
-    <option value="COMMAND">
-      Command
-    </option>
+ <select
+  className="form-input"
+  value={validationType}
+  onChange={(e) =>
+    setValidationType(e.target.value)
+  }
+>
+  <option value="NONE">
+    No Validation
+  </option>
 
-    <option value="DIRECTORY_EXISTS">
-      Directory Exists
-    </option>
+  <option value="COMMAND">
+    Command
+  </option>
 
-    <option value="FILE_EXISTS">
-      File Exists
-    </option>
+  <option value="DIRECTORY_EXISTS">
+    Directory Exists
+  </option>
 
-    <option value="FILE_CONTAINS">
-      File Contains
-    </option>
+  <option value="FILE_EXISTS">
+    File Exists
+  </option>
 
-    <option value="PERMISSION">
-      Permission
-    </option>
-  </select>
+  <option value="FILE_CONTAINS">
+    File Contains
+  </option>
+
+  <option value="PERMISSION">
+    Permission
+  </option>
+</select>
 </div>
 
           {validationType === "COMMAND" && (

@@ -16,6 +16,8 @@ import { CreateChallengeInput, CreateTaskInput, UpdateChallengeInput, UpdateTask
 import { ValidationTask } from "../validation/types/ValidationTask";
 import { ValidationType } from "../validation/types/ValidationType";
 
+
+
 type PublishedChallengeSummary = Pick<
   Challenge,
   'id' | 'title' | 'slug' | 'difficulty' | 'estimatedMinutes'
@@ -53,17 +55,17 @@ export class ChallengeRepository {
         deletedAt: null,
       },
       include: {
-        tasks: {
-          orderBy: { order: 'asc' },
-          select: {
-            id: true,
-            title: true,
-            description: true,
-            order: true,
-            hint: true,
+       tasks: {
+  orderBy: { order: "asc" },
+  select: {
+    id: true,
+    title: true,
+    description: true,
+    order: true,
+    hint: true,
 
-          },
-        },
+  },
+},
       },
     });
   }

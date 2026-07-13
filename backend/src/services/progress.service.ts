@@ -15,12 +15,13 @@ export interface ProgressData {
   completedTasks: number;
   totalTasks: number;
   percentage: number;
-  currentTask: {
+ currentTask: {
   id: string;
   title: string;
   description: string;
   hint: string | null;
   order: number;
+  requiresValidation: boolean;
 } | null;
   lastValidatedAt: string | null;
   isCompleted: boolean;
@@ -79,12 +80,18 @@ export class ProgressService {
       totalTasks,
       percentage,
       currentTask: currentTask
-  ? {
+  ?  {
       id: currentTask.id,
       title: currentTask.title,
       description: currentTask.description,
       hint: currentTask.hint,
-      order: currentTask.order
+      order: currentTask.order,
+      requiresValidation:
+        (
+          await challengeRepository.findTaskValidations(
+            currentTask.id
+          )
+        ).length > 0,
     }
   : null,
       lastValidatedAt,

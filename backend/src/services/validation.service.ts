@@ -81,7 +81,7 @@ export class ValidationService {
 
 if (taskValidations.length === 0) {
   throw new AppError(
-    'No validation configured for this task',
+    "This task does not require validation. Please use 'Mark Complete'.",
     400
   );
 }
@@ -132,6 +132,111 @@ return this.validateWithExecutor(
 }
   );
 
+}
+
+
+async markTaskComplete(
+  taskId: string,
+  sessionId: string,
+  userId: string
+): Promise<any> {
+
+  const task = await challengeRepository.findTaskById(taskId);
+  if (!task) {
+    throw new AppError("Task not found", 404);
+  }
+
+  const session = await sessionRepository.findById(sessionId);
+  if (!session) {
+    throw new AppError("Session not found", 404);
+  }
+
+  if (session.userId !== userId) {
+    throw new AppError(
+      "Unauthorized access to this session",
+      403
+    );
+  }
+
+  if (session.status !== SessionStatus.RUNNING) {
+    throw new AppError(
+      "Session is not active",
+      400
+    );
+  }
+
+  const validations =
+    await challengeRepository.findTaskValidations(
+      task.id
+    );
+
+  if (validations.length > 0) {
+    throw new AppError(
+      "This task requires validation.",
+      400
+    );
+  }
+
+  const existing =
+    await prisma.validationResult.findFirst({
+      where: {
+        sessionId,
+        taskId,
+        passed: true,
+      },
+    });
+
+  if (existing) {
+    return {
+      validationResult: existing,
+      passed: true,
+      feedback: "Task already completed.",
+      task: {
+        id: task.id,
+        title: task.title,
+      },
+      alreadyCompleted: true,
+    };
+  }
+
+  const savedResult =
+    await prisma.validationResult.create({
+      data: {
+        sessionId,
+        taskId,
+        passed: true,
+        feedback: "Task completed manually.",
+      },
+    });
+
+  await prisma.analyticsEvent.create({
+    data: {
+      userId,
+      challengeId: session.challengeId,
+      sessionId: session.id,
+      eventType: "TASK_COMPLETED" as any,
+      metadata: {
+        taskId: task.id,
+        taskTitle: task.title,
+      },
+    },
+  });
+
+  await this.checkAndCompleteChallenge(
+    session.id,
+    userId,
+    session.challengeId
+  );
+
+  return {
+    validationResult: savedResult,
+    passed: true,
+    feedback: "Task completed.",
+    task: {
+      id: task.id,
+      title: task.title,
+    },
+  };
 }
 
   private async processValidationResult(

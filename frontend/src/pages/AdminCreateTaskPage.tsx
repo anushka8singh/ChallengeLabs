@@ -13,7 +13,8 @@ const AdminCreateTaskPage = () => {
 
   const [loading, setLoading] =
     useState(false);
-const [validationType, setValidationType] = useState("COMMAND");
+const [validationType, setValidationType] =
+  useState("NONE");
 
 const [directoryPath, setDirectoryPath] = useState("");
 const [filePath, setFilePath] = useState("");
@@ -39,53 +40,61 @@ const [expectedOutput, setExpectedOutput] = useState('');
     try {
       setLoading(true);
 
-     let validationConfig: Record<string, unknown>;
-
-switch (validationType) {
-  case "DIRECTORY_EXISTS":
-    validationConfig = {
-      directories: [directoryPath],
-    };
-    break;
-
-  case "FILE_EXISTS":
-    validationConfig = {
-      files: [filePath],
-    };
-    break;
-
-  case "FILE_CONTAINS":
-    validationConfig = {
-      file: filePath,
-      contains: fileContent,
-    };
-    break;
-
-  case "PERMISSION":
-    validationConfig = {
-      file: filePath,
-      permission,
-    };
-    break;
-
-  case "COMMAND":
-  default:
-    validationConfig = {
-  command,
-  expectedOutput:
-    expectedOutput || undefined,
-};
-    break;
-}
-
-const payload = {
+     let payload: any = {
   title: form.title,
   description: form.description,
   order: form.order,
   hint: form.hint,
-  validationType,
-  validationConfig,
 };
+
+if (validationType !== "NONE") {
+  let validationConfig: Record<
+    string,
+    unknown
+  >;
+
+  switch (validationType) {
+    case "DIRECTORY_EXISTS":
+      validationConfig = {
+        directories: [directoryPath],
+      };
+      break;
+
+    case "FILE_EXISTS":
+      validationConfig = {
+        files: [filePath],
+      };
+      break;
+
+    case "FILE_CONTAINS":
+      validationConfig = {
+        file: filePath,
+        contains: fileContent,
+      };
+      break;
+
+    case "PERMISSION":
+      validationConfig = {
+        file: filePath,
+        permission,
+      };
+      break;
+
+    case "COMMAND":
+    default:
+      validationConfig = {
+        command,
+        expectedOutput:
+          expectedOutput || undefined,
+      };
+  }
+
+  payload.validationType =
+    validationType;
+
+  payload.validationConfig =
+    validationConfig;
+}
 
 await createTask(
   challengeId,
@@ -198,35 +207,39 @@ await createTask(
   </label>
 
   <select
-    className="form-input"
-    value={validationType}
-    onChange={(e) =>
-      setValidationType(e.target.value)
-    }
-  >
-    <option value="COMMAND">
-      Command
-    </option>
+  className="form-input"
+  value={validationType}
+  onChange={(e) =>
+    setValidationType(e.target.value)
+  }
+>
+  <option value="NONE">
+    No Validation
+  </option>
 
-    <option value="DIRECTORY_EXISTS">
-      Directory Exists
-    </option>
+  <option value="COMMAND">
+    Command
+  </option>
 
-    <option value="FILE_EXISTS">
-      File Exists
-    </option>
+  <option value="DIRECTORY_EXISTS">
+    Directory Exists
+  </option>
 
-    <option value="FILE_CONTAINS">
-      File Contains
-    </option>
+  <option value="FILE_EXISTS">
+    File Exists
+  </option>
 
-    <option value="PERMISSION">
-      Permission
-    </option>
-  </select>
+  <option value="FILE_CONTAINS">
+    File Contains
+  </option>
+
+  <option value="PERMISSION">
+    Permission
+  </option>
+</select>
 </div>
 
-          {validationType === "COMMAND" && (
+          {validationType !== "NONE" && validationType === "COMMAND" && (
   <>
     <div className="form-group">
       <label className="form-label">
@@ -261,7 +274,7 @@ onChange={(e) => setExpectedOutput(e.target.value)}
   </>
 )}
 
-{validationType === "DIRECTORY_EXISTS" && (
+{validationType !== "NONE" && validationType === "DIRECTORY_EXISTS" && (
   <div className="form-group">
     <label className="form-label">
       Directory Path
@@ -279,7 +292,7 @@ onChange={(e) => setExpectedOutput(e.target.value)}
   </div>
 )}
 
-{validationType === "FILE_EXISTS" && (
+{validationType !== "NONE" && validationType === "FILE_EXISTS" && (
   <div className="form-group">
     <label className="form-label">
       File Path
@@ -297,7 +310,7 @@ onChange={(e) => setExpectedOutput(e.target.value)}
   </div>
 )}
 
-{validationType === "FILE_CONTAINS" && (
+{validationType !== "NONE" && validationType === "FILE_CONTAINS" && (
   <>
     <div className="form-group">
       <label className="form-label">
@@ -333,7 +346,7 @@ onChange={(e) => setExpectedOutput(e.target.value)}
   </>
 )}
 
-{validationType === "PERMISSION" && (
+{validationType !== "NONE" && validationType === "PERMISSION" && (
   <>
     <div className="form-group">
       <label className="form-label">

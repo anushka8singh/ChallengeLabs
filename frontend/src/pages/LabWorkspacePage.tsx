@@ -11,6 +11,7 @@ import toast from 'react-hot-toast';
 import {
   getCurrentProgress,
   validateTask,
+  markTaskComplete,
   stopSession,
   getSessionById,
 } from '../services/sessionService';
@@ -320,6 +321,50 @@ useEffect(() => {
     }
   };
 
+  const handleMarkComplete = async () => {
+  if (
+    !progress?.currentTask ||
+    !sessionId ||
+    validating
+  ) {
+    return;
+  }
+
+  setValidating(true);
+
+  try {
+    const res =
+      await markTaskComplete(
+        progress.currentTask.id,
+        sessionId
+      );
+
+    if (res.success) {
+      toast.success(
+        res.data.feedback ??
+          "Task completed."
+      );
+
+      const updated =
+        await getCurrentProgress();
+
+      if (
+        updated.success &&
+        updated.data
+      ) {
+        setProgress(updated.data);
+      }
+    }
+  } catch (err: any) {
+    toast.error(
+      err?.response?.data?.message ??
+        "Failed to complete task."
+    );
+  } finally {
+    setValidating(false);
+  }
+};
+
   // ── Shared header (always rendered) ──────────────────────────────────────
   const header = (
     <div className="lab-header">
@@ -488,24 +533,45 @@ useEffect(() => {
                 </div>
 
                 {/* Validate Button */}
-                <button
-                  id="validate-task-btn"
-                  className="btn-primary lab-validate-btn"
-                  onClick={handleValidateTask}
-                  disabled={validating}
-                >
-                  {validating ? (
-                    <>
-                      <span className="btn-spinner" />
-                      Validating...
-                    </>
-                  ) : (
-                    <>
-                      <Play size={14} />
-                      Validate Task
-                    </>
-                  )}
-                </button>
+                {progress.currentTask.requiresValidation ? (
+  <button
+    id="validate-task-btn"
+    className="btn-primary lab-validate-btn"
+    onClick={handleValidateTask}
+    disabled={validating}
+  >
+    {validating ? (
+      <>
+        <span className="btn-spinner" />
+        Validating...
+      </>
+    ) : (
+      <>
+        <Play size={14} />
+        Validate Task
+      </>
+    )}
+  </button>
+) : (
+  <button
+    id="mark-task-btn"
+    className="btn-primary lab-validate-btn"
+    onClick={handleMarkComplete}
+    disabled={validating}
+  >
+    {validating ? (
+      <>
+        <span className="btn-spinner" />
+        Completing...
+      </>
+    ) : (
+      <>
+        <CheckCircle2 size={14} />
+        Mark Complete
+      </>
+    )}
+  </button>
+)}
               </div>
             </div>
           ) : (

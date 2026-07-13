@@ -36,6 +36,7 @@ export interface CurrentTask {
   description: string;
   hint: string | null;
   order: number;
+  requiresValidation: boolean;
 }
 
 export interface ProgressData {
@@ -48,6 +49,7 @@ export interface ProgressData {
   currentTask: CurrentTask | null;
   lastValidatedAt?: string | null;
   isCompleted: boolean;
+  
 }
 
 export interface CurrentProgressResponse {
@@ -150,5 +152,19 @@ export interface TaskValidationResponse {
 
 export const validateTask = async (taskId: string, sessionId: string): Promise<TaskValidationResponse> => {
   const res = await api.post<TaskValidationResponse>(`/api/tasks/${taskId}/validate`, { sessionId });
+  return res.data;
+};
+
+export const markTaskComplete = async (
+  taskId: string,
+  sessionId: string
+) => {
+  const res = await api.post(
+    `/api/tasks/${taskId}/complete`,
+    {
+      sessionId,
+    }
+  );
+
   return res.data;
 };

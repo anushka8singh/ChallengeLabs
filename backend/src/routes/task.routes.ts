@@ -19,5 +19,11 @@ router.post(
   taskController.validateTask
 );
 
+router.post(
+  '/:taskId/complete',
+  validateRequest(validateTaskSchema),
+  taskController.markTaskComplete
+);
+
 export default router;
 

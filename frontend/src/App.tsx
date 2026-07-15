@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 import ProtectedRoute from './routes/ProtectedRoute';
 import DashboardLayout from './components/layout/DashboardLayout';
 import LoginPage from './pages/LoginPage';
@@ -20,20 +21,21 @@ import LandingPage from './pages/LandingPage';
 function App() {
   return (
     <BrowserRouter>
+      <ThemeProvider>
       <AuthProvider>
         <Toaster
           position="top-right"
           toastOptions={{
             style: {
-              background: '#1F1F23',
-              color: '#FAFAFA',
-              border: '1px solid #2A2A31',
+              background: 'var(--surface-3)',
+              color: 'var(--text-primary)',
+              border: '1px solid var(--border)',
               borderRadius: '10px',
               fontSize: '14px',
               fontFamily: 'Inter, sans-serif',
             },
-            success: { iconTheme: { primary: '#22C55E', secondary: '#1F1F23' } },
-            error:   { iconTheme: { primary: '#EF4444', secondary: '#1F1F23' } },
+            success: { iconTheme: { primary: 'var(--success)', secondary: 'var(--surface-3)' } },
+            error:   { iconTheme: { primary: 'var(--error)',   secondary: 'var(--surface-3)' } },
           }}
         />
 
@@ -78,6 +80,7 @@ function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AuthProvider>
+      </ThemeProvider>
     </BrowserRouter>
   );
 }

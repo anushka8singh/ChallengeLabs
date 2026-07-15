@@ -1,6 +1,7 @@
 import { Menu, Zap } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import ThemeToggle from "../common/ThemeToggle";
 
 interface TopBarProps {
   toggleSidebar: () => void;
@@ -49,6 +50,7 @@ const TopBar = ({ toggleSidebar }: TopBarProps) => {
 </div>
 
       <div className="topbar-right">
+        <ThemeToggle />
         <div
           className="topbar-avatar"
           title={user?.name}

@@ -14,6 +14,7 @@ import challengeRoutes, { adminChallengeRoutes } from './routes/challenge.routes
 import sessionRoutes from './routes/session.routes';
 import taskRoutes from './routes/task.routes';
 import progressRoutes from './routes/progress.routes';
+import userRoutes from "./routes/user.routes";
 
 const app: Application = express();
 
@@ -76,6 +77,7 @@ app.use('/api/admin/challenges', adminChallengeRoutes);
 app.use('/api/sessions', sessionRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/progress', progressRoutes);
+app.use("/api/admin/users", userRoutes);
 // ===========================================
 // API Routes Placeholder
 

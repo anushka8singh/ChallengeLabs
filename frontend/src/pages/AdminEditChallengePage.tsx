@@ -28,6 +28,7 @@ const AdminEditChallengePage = () => {
       dockerImage: '',
       setupScript: '',
       estimatedMinutes: 30,
+      isPremium: false,
       isPublished: false,
     });
 
@@ -41,16 +42,17 @@ const AdminEditChallengePage = () => {
     if (res.success) {
       const challenge = res.data;
 
-      setForm({
-        title: challenge.title,
-        slug: challenge.slug,
-        description: challenge.description,
-        difficulty: challenge.difficulty,
-        dockerImage: challenge.dockerImage,
-        setupScript: challenge.setupScript ?? '',
-        estimatedMinutes: challenge.estimatedMinutes,
-        isPublished: challenge.isPublished,
-      });
+     setForm({
+  title: challenge.title,
+  slug: challenge.slug,
+  description: challenge.description,
+  difficulty: challenge.difficulty,
+  dockerImage: challenge.dockerImage,
+  setupScript: challenge.setupScript ?? '',
+  estimatedMinutes: challenge.estimatedMinutes,
+  isPremium: challenge.isPremium,
+  isPublished: challenge.isPublished,
+});
     }
   })
       .finally(() =>
@@ -179,6 +181,32 @@ const AdminEditChallengePage = () => {
               <option value="ADVANCED">Advanced</option>
             </select>
           </div>
+
+<div className="form-group">
+  <label className="form-label">
+    Challenge Type
+  </label>
+
+  <select
+    className="form-input"
+    value={form.isPremium ? "PREMIUM" : "BASIC"}
+    onChange={(e) =>
+      setForm({
+        ...form,
+        isPremium:
+          e.target.value === "PREMIUM",
+      })
+    }
+  >
+    <option value="BASIC">
+      Basic
+    </option>
+
+    <option value="PREMIUM">
+      Premium
+    </option>
+  </select>
+</div>
 
           <div className="form-group">
             <label className="form-label">Docker Image</label>

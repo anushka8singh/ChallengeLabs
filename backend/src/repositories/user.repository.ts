@@ -19,6 +19,45 @@ export class UserRepository {
     });
   }
 
+  async findAll(): Promise<User[]> {
+  return prisma.user.findMany({
+    orderBy: {
+      createdAt: 'desc',
+    },
+  });
+}
+
+
+async updatePremiumAccess(
+  userId: string,
+  hasPremiumAccess: boolean
+): Promise<User> {
+  return prisma.user.update({
+    where: {
+      id: userId,
+    },
+    data: {
+      hasPremiumAccess,
+    },
+  });
+}
+
+async updateRole(
+  userId: string,
+  role: 'USER' | 'ADMIN'
+): Promise<User> {
+  return prisma.user.update({
+    where: {
+      id: userId,
+    },
+    data: {
+      role,
+    },
+  });
+}
+
+
+
   async create(data: {
     name: string;
     email: string;

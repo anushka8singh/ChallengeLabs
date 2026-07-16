@@ -25,6 +25,7 @@ export const createChallengeSchema = z.object({
     .int("Estimated minutes must be an integer")
     .min(5, "Estimated time must be at least 5 minutes")
     .max(300, "Estimated time cannot exceed 300 minutes"),
+    isPremium: z.boolean().optional().default(false),
   isPublished: z.boolean().optional().default(false),
 });
 

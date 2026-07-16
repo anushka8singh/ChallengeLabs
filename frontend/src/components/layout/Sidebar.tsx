@@ -6,6 +6,7 @@ import {
   LogOut,
   Zap,
   ShieldCheck,
+  Users,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
@@ -75,18 +76,32 @@ const Sidebar = ({
             <span>{label}</span>
           </NavLink>
         ))}
-        {isAdmin && (
-  <NavLink
-    to="/admin"
-    className={({ isActive }) =>
-      `sidebar-nav-item ${
-        isActive ? 'sidebar-nav-item--active' : ''
-      }`
-    }
-  >
-    <ShieldCheck size={16} />
-    <span>Admin</span>
-  </NavLink>
+       {isAdmin && (
+  <>
+    <NavLink
+      to="/admin"
+      className={({ isActive }) =>
+        `sidebar-nav-item ${
+          isActive ? "sidebar-nav-item--active" : ""
+        }`
+      }
+    >
+      <ShieldCheck size={16} />
+      <span>Admin</span>
+    </NavLink>
+
+    <NavLink
+      to="/admin/users"
+      className={({ isActive }) =>
+        `sidebar-nav-item ${
+          isActive ? "sidebar-nav-item--active" : ""
+        }`
+      }
+    >
+      <Users size={16} />
+      <span>Users</span>
+    </NavLink>
+  </>
 )}
       </nav>
 

@@ -13,26 +13,54 @@ export class ChallengeService {
   // STUDENT ENDPOINTS (Public access for viewing)
   // ===========================================
 
-  async getAllChallenges() {
-    return challengeRepository.findAllPublished();
+ async getAllChallenges(
+  userId: string
+) {
+  return challengeRepository.findAllPublished(
+    userId
+  );
+}
+
+  async getChallengeBySlug(
+  slug: string,
+  userId: string
+) {
+  const challenge =
+    await challengeRepository.findBySlugPublished(
+      slug,
+      userId
+    );
+
+  if (!challenge) {
+    throw new AppError(
+      "Challenge not found",
+      404
+    );
   }
 
-  async getChallengeBySlug(slug: string) {
-    const challenge = await challengeRepository.findBySlugPublished(slug);
-    if (!challenge) {
-      throw new AppError('Challenge not found or not published', 404);
-    }
-    return challenge;
+  return challenge;
+}
+  async getTasksForChallenge(
+  challengeId: string,
+  userId: string
+) {
+  const challenge =
+    await challengeRepository.findByIdForUser(
+      challengeId,
+      userId
+    );
+
+  if (!challenge) {
+    throw new AppError(
+      "Challenge not found",
+      404
+    );
   }
 
-  async getTasksForChallenge(challengeId: string) {
-    // Verify challenge exists and is published
-    const challenge = await challengeRepository.findById(challengeId);
-    if (!challenge || !challenge.isPublished || challenge.deletedAt) {
-      throw new AppError('Challenge not found or not published', 404);
-    }
-    return challengeRepository.findTasksByChallengeId(challengeId);
-  }
+  return challengeRepository.findTasksByChallengeId(
+    challengeId
+  );
+}
 
   // Note: Hints are included in getChallengeBySlug and getTasks
 

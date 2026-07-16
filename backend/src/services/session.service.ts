@@ -3,14 +3,14 @@
 // Core business logic for lab session + Docker container lifecycle (Phase 5)
 // Integrates with existing Challenge and Session models
 // ===========================================
-
+import { prisma } from "../config/prisma";
 import { SessionStatus } from '@prisma/client';
 import { dockerService } from './docker.service';
 import { sessionRepository } from '../repositories/session.repository';
 import { challengeRepository } from '../repositories/challenge.repository';
 import { AppError } from '../middleware/errorHandler';
 import { logger } from '../config/logger';
-
+import { userRepository } from "../repositories/user.repository";
 const sessionLogger = logger.child({ service: 'session' });
 
 export class SessionService {
@@ -25,6 +25,23 @@ export class SessionService {
     if (!challenge || !challenge.isPublished || challenge.deletedAt) {
       throw new AppError('Challenge not found or not available', 404);
     }
+
+    const user = await userRepository.findById(userId);
+
+if (!user) {
+  throw new AppError("User not found", 404);
+}
+
+if (
+  challenge.isPremium &&
+  !user.hasPremiumAccess
+) {
+  throw new AppError(
+    "Premium access required",
+    403
+  );
+}
+
 
     
     // 2. Check if user already has an active session for this challenge

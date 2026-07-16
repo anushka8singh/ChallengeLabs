@@ -10,6 +10,7 @@ import {
   ChallengeTask,
   Difficulty,
   Prisma,
+  User,
   ValidationType as PrismaValidationType,
 } from '@prisma/client';
 import { CreateChallengeInput, CreateTaskInput, UpdateChallengeInput, UpdateTaskInput } from '../validators/challenge.validator';
@@ -18,57 +19,111 @@ import { ValidationType } from "../validation/types/ValidationType";
 
 
 
-type PublishedChallengeSummary = Pick<
-  Challenge,
-  'id' | 'title' | 'slug' | 'difficulty' | 'estimatedMinutes'
->;
+type PublishedChallengeSummary =
+  Pick<
+    Challenge,
+    | "id"
+    | "title"
+    | "slug"
+    | "difficulty"
+    | "estimatedMinutes"
+    | "isPremium"
+  > & {
+    hasAccess: boolean;
+  };
 
 export class ChallengeRepository {
   // ===========================================
   // CHALLENGE QUERIES (Student facing - published only)
   // ===========================================
+private async getUser(userId: string): Promise<User> {
+  const user = await prisma.user.findUnique({
+    where: {
+      id: userId,
+    },
+  });
 
-  async findAllPublished(): Promise<PublishedChallengeSummary[]> {
-    return prisma.challenge.findMany({
-      where: {
-        isPublished: true,
-        deletedAt: null,
-      },
-      select: {
-        id: true,
-        title: true,
-        slug: true,
-        difficulty: true,
-        estimatedMinutes: true,
-      },
-      orderBy: {
-        createdAt: 'asc',
-      },
-    });
+  if (!user) {
+    throw new Error("User not found");
   }
 
-  async findBySlugPublished(slug: string): Promise<Challenge | null> {
-    return prisma.challenge.findFirst({
-      where: {
-        slug,
-        isPublished: true,
-        deletedAt: null,
-      },
-      include: {
-       tasks: {
-  orderBy: { order: "asc" },
+  return user;
+}
+
+  async findAllPublished(
+  userId: string
+): Promise<PublishedChallengeSummary[]> {
+
+  const user = await this.getUser(userId);
+
+ const challenges = await prisma.challenge.findMany({
+  where: {
+    isPublished: true,
+    deletedAt: null,
+  },
+
   select: {
     id: true,
     title: true,
-    description: true,
-    order: true,
-    hint: true,
-
+    slug: true,
+    difficulty: true,
+    estimatedMinutes: true,
+    isPremium: true,
   },
-},
+
+  orderBy: {
+    createdAt: "asc",
+  },
+});
+
+return challenges.map((challenge) => ({
+  ...challenge,
+  hasAccess:
+    !challenge.isPremium ||
+    user.hasPremiumAccess,
+}));
+}
+
+  async findBySlugPublished(
+  slug: string,
+  userId: string
+): Promise<Challenge | null> {
+
+  const user = await this.getUser(userId);
+
+  return prisma.challenge.findFirst({
+    where: {
+      slug,
+      isPublished: true,
+      deletedAt: null,
+
+      OR: [
+        {
+          isPremium: false,
+        },
+        {
+          isPremium: user.hasPremiumAccess,
+        },
+      ],
+    },
+
+    include: {
+      tasks: {
+        orderBy: {
+          order: "asc",
+        },
+
+        select: {
+          id: true,
+          title: true,
+          description: true,
+          order: true,
+          hint: true,
+        },
       },
-    });
-  }
+    },
+  });
+}
 
   async findTasksByChallengeId(challengeId: string): Promise<ChallengeTask[]> {
     return prisma.challengeTask.findMany({
@@ -104,26 +159,56 @@ export class ChallengeRepository {
     });
   }
 
+  async findByIdForUser(
+  id: string,
+  userId: string
+) {
+  const user = await this.getUser(userId);
+
+  return prisma.challenge.findFirst({
+    where: {
+      id,
+      isPublished: true,
+      deletedAt: null,
+
+      OR: [
+        {
+          isPremium: false,
+        },
+        {
+          isPremium: user.hasPremiumAccess,
+        },
+      ],
+    },
+  });
+}
+
   // ===========================================
   // CREATE / UPDATE / DELETE
   // ===========================================
 
   async create(data: CreateChallengeInput): Promise<Challenge> {
-    return prisma.challenge.create({
-      data: {
-        ...data,
-        difficulty: data.difficulty as Difficulty,
-      },
-    });
-  }
+  return prisma.challenge.create({
+    data: {
+      ...data,
+      difficulty: data.difficulty as Difficulty,
+      isPremium: data.isPremium,
+    },
+  });
+}
 
   async update(id: string, data: UpdateChallengeInput): Promise<Challenge> {
     return prisma.challenge.update({
       where: { id },
-      data: {
-        ...data,
-        ...(data.difficulty && { difficulty: data.difficulty as Difficulty }),
-      },
+     data: {
+  ...data,
+  ...(data.difficulty && {
+    difficulty: data.difficulty as Difficulty,
+  }),
+  ...(data.isPremium !== undefined && {
+    isPremium: data.isPremium,
+  }),
+},
     });
   }
 

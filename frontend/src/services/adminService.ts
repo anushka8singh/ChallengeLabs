@@ -1,11 +1,20 @@
 import api from '../api/axios';
 
+export interface AdminUser {
+  id: string;
+  name: string;
+  email: string;
+  role: "USER" | "ADMIN";
+  hasPremiumAccess: boolean;
+}
+
 export interface AdminChallenge {
   id: string;
   title: string;
   slug: string;
   difficulty: string;
   estimatedMinutes: number;
+  isPremium: boolean;
   isPublished: boolean;
   tasks: {
     id: string;
@@ -34,6 +43,7 @@ export const getAdminChallenges =
   dockerImage: string;
   setupScript?: string;
   estimatedMinutes: number;
+  isPremium: boolean;
   isPublished: boolean;
 }
 
@@ -158,6 +168,39 @@ export const getTaskById = async (
 ) => {
   const res = await api.get(
     `/api/admin/challenges/tasks/${taskId}`
+  );
+
+  return res.data;
+};
+
+export const getUsers = async () => {
+  const res = await api.get("/api/admin/users");
+  return res.data;
+};
+
+export const updateUserPremium = async (
+  userId: string,
+  hasPremiumAccess: boolean
+) => {
+  const res = await api.patch(
+    `/api/admin/users/${userId}/premium`,
+    {
+      hasPremiumAccess,
+    }
+  );
+
+  return res.data;
+};
+
+export const updateUserRole = async (
+  userId: string,
+  role: "USER" | "ADMIN"
+) => {
+  const res = await api.patch(
+    `/api/admin/users/${userId}/role`,
+    {
+      role,
+    }
   );
 
   return res.data;

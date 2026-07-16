@@ -18,6 +18,8 @@ import AdminEditChallengePage from './pages/AdminEditChallengePage';
 import AdminEditTaskPage from './pages/AdminEditTaskPage';
 import CompletedChallengesPage from './pages/CompletedChallengesPage';
 import LandingPage from './pages/LandingPage';
+import AdminUsersPage from './pages/AdminUsersPage';
+
 function App() {
   return (
     <BrowserRouter>
@@ -60,6 +62,10 @@ function App() {
   element={<CompletedChallengesPage />}
 />
   <Route path="/admin" element={<AdminDashboardPage />} />
+  <Route
+  path="/admin/users"
+  element={<AdminUsersPage />}
+/>
   <Route path="/admin/challenges/new" element={<AdminCreateChallengePage />} />
   <Route path="/admin/challenges/:challengeId/tasks" element={<AdminChallengeTasksPage />} />
   <Route path="/admin/challenges/:challengeId/tasks/new" element={<AdminCreateTaskPage />} />

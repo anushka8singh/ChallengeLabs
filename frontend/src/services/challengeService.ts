@@ -6,6 +6,9 @@ export interface Challenge {
   slug: string;
   difficulty: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
   estimatedMinutes: number;
+
+  isPremium: boolean;
+  hasAccess: boolean;
 }
 
 export interface Task {

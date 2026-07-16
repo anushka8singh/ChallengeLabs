@@ -176,35 +176,32 @@ const [resumeSessionId, setResumeSessionId] =
   setChallenge(res.data);
 
   try {
+  const current = await getCurrentSession();
 
-    const current =
-      await getCurrentSession();
-
-    if (
-      current.success &&
-      current.data &&
-      current.data.challenge?.id === res.data.id
-    ) {
-
-      setResumeSessionId(
-        current.data.id
-      );
-
-    } else {
-
-      setResumeSessionId(null);
-
-    }
-
-  } catch {
-
+  if (
+    current.success &&
+    current.data &&
+    current.data.challenge?.id === res.data.id
+  ) {
+    setResumeSessionId(current.data.id);
+  } else {
     setResumeSessionId(null);
-
   }
+} catch {
+  setResumeSessionId(null);
+}
 
 })
-      .catch(() => setError('Could not load this challenge. Please try again.'))
-      .finally(() => setLoading(false));
+      .catch((err: any) => {
+  if (err?.response?.status === 403) {
+    setError("Premium challenge. Upgrade required.");
+  } else if (err?.response?.status === 404) {
+    setError("Challenge not found.");
+  } else {
+    setError("Could not load this challenge.");
+  }
+})
+.finally(() => setLoading(false));
   }, [slug]);
 
   if (loading) {

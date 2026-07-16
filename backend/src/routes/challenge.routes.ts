@@ -22,7 +22,7 @@ const router = Router();
 // ===========================================
 // STUDENT ROUTES (Public - No authentication required)
 // ===========================================
-
+router.use(authenticate);
 // GET all published challenges
 router.get('/', challengeController.getAllChallenges);
 

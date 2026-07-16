@@ -14,19 +14,39 @@ export class ChallengeController {
   // STUDENT APIs (No auth required for viewing)
   // ===========================================
 
-  async getAllChallenges(_req: Request, res: Response, next: NextFunction): Promise<void> {
-    try {
-      const challenges = await challengeService.getAllChallenges();
-      successResponse(res, challenges, 'Challenges retrieved successfully');
-    } catch (error) {
-      next(error);
-    }
+  async getAllChallenges(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const userId = req.user!.userId;
+
+    const challenges =
+      await challengeService.getAllChallenges(
+        userId
+      );
+
+    successResponse(
+      res,
+      challenges,
+      'Challenges retrieved successfully'
+    );
+  } catch (error) {
+    next(error);
   }
+}
 
   async getChallengeBySlug(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { slug } = req.params;
-      const challenge = await challengeService.getChallengeBySlug(slug);
+     const userId = req.user!.userId;
+
+const challenge =
+  await challengeService.getChallengeBySlug(
+    slug,
+    userId
+  );
       successResponse(res, challenge, 'Challenge retrieved successfully');
     } catch (error) {
       next(error);
@@ -36,7 +56,8 @@ export class ChallengeController {
   async getTasksForChallenge(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { id } = req.params;
-      const tasks = await challengeService.getTasksForChallenge(id);
+      const userId = req.user!.userId;
+      const tasks = await challengeService.getTasksForChallenge(id, userId);
       successResponse(res, tasks, 'Tasks retrieved successfully');
     } catch (error) {
       next(error);

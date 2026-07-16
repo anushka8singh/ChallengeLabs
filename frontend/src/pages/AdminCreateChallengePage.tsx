@@ -14,16 +14,17 @@ const AdminCreateChallengePage = () => {
   const [loading, setLoading] = useState(false);
 
   const [form, setForm] =
-    useState<CreateChallengePayload>({
-      title: '',
-      slug: '',
-      description: '',
-      difficulty: 'BEGINNER',
-      dockerImage: '',
-      setupScript: '',
-      estimatedMinutes: 30,
-      isPublished: false,
-    });
+  useState<CreateChallengePayload>({
+    title: '',
+    slug: '',
+    description: '',
+    difficulty: 'BEGINNER',
+    dockerImage: '',
+    setupScript: '',
+    estimatedMinutes: 30,
+    isPremium: false,
+    isPublished: false,
+  });
 
   const handleSubmit = async (
     e: React.FormEvent
@@ -132,6 +133,32 @@ const AdminCreateChallengePage = () => {
               <option value="ADVANCED">Advanced</option>
             </select>
           </div>
+
+<div className="form-group">
+  <label className="form-label">
+    Challenge Type
+  </label>
+
+  <select
+    className="form-input"
+    value={form.isPremium ? "PREMIUM" : "BASIC"}
+    onChange={(e) =>
+      setForm({
+        ...form,
+        isPremium:
+          e.target.value === "PREMIUM",
+      })
+    }
+  >
+    <option value="BASIC">
+      Basic
+    </option>
+
+    <option value="PREMIUM">
+      Premium
+    </option>
+  </select>
+</div>
 
           <div className="form-group">
             <label className="form-label">Docker Image</label>
